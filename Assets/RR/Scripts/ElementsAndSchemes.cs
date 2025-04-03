@@ -9,53 +9,65 @@ public class ElementsAndSchemes : MonoBehaviour
    public GameObject scheme;
 
    public Transform hand;
-   public Transform camera;
+   public Transform handShiftElement;
+   public Transform cameraTransform;
 
-private bool schemeV;
-private float yAngles;
+private bool schemeH;
+public static bool yChange = false;
+
+public static int yAngles;
+// private Vector3 elementPos;
+// private Quaternion elementRot;
 
 private void Update(){
 
-if((camera.rotation.y >= 0.38f && camera.rotation.y <= 0.92f ) || (camera.rotation.y >= -0.92f && camera.rotation.y <= -0.38f ))
-{
-    yAngles = 90;
-}else{
-    yAngles = 0;
-}
-
+    if (((cameraTransform.rotation.y >= 0.38f && cameraTransform.rotation.y <= 0.92f) || 
+         (cameraTransform.rotation.y >= -0.92f && cameraTransform.rotation.y <= -0.38f)) && !yChange)
+    {
+        yAngles = 90;
+        yChange = true;
+    }
+    else
+    {
+        yAngles = 0;
+        yChange = false;
+    }
 }
 
     private List<GameObject> elements = new List<GameObject>();
     private List<GameObject> schemes = new List<GameObject>();
 
     public void HorizontalScheme(){
-        schemeV = false;
+        schemeH = true;
     }
 
       public void VerticalScheme(){
-        schemeV = true;
+        schemeH = false;
     }
 
     public void CreateElement(GameObject prefab){
-        if(hand.childCount == 0){
-       // prefab.transform.position = new Vector3(0.8f, 1.75f, 3.5f);
-        GameObject newElement = Instantiate(prefab, hand.position += new Vector3(0.8f, 0, -1), hand.rotation);
+        //if(hand.childCount == 0){
+            // Debug.Log("1) Elements Position: " + elementPos);
+            //elementPos += new Vector3(0.8f, 0, -1);
+            // Debug.Log("2) Elements Position: " + elementPos);
+        GameObject newElement = Instantiate(prefab, handShiftElement.position, handShiftElement.rotation);
         elements.Add(newElement);
 
-        newElement.transform.SetParent(hand.transform);
+        newElement.transform.SetParent(handShiftElement.transform);
         newElement.GetComponent<Rigidbody>().isKinematic = true;
  
-       Debug.Log("Elements Position: " + hand.position);
-        }
+    //  elementPos = hand.position;
+    //    Debug.Log("Renew Elements Position: " + elementPos);
+       
     }
 
     public void CreateScheme(){
-        Quaternion rotation = schemeV ? Quaternion.Euler(90, yAngles, 0) : Quaternion.Euler(0, yAngles, 0);
+        Quaternion rotation = schemeH ? Quaternion.Euler(0, yAngles, 0) : Quaternion.Euler(90, yAngles, 0);
     
         GameObject newScheme = Instantiate(scheme, hand.position, rotation);
         schemes.Add(newScheme);
 
-  newScheme.transform.SetParent(hand.transform);
+  //newScheme.transform.SetParent(hand.transform);
         newScheme.GetComponent<Rigidbody>().isKinematic = true;
     
          Debug.Log("Scheme Position: " + hand.position);

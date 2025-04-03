@@ -5,11 +5,11 @@ using Valve.VR;
 
 public class HoldElements : MonoBehaviour
 {
-    public SteamVR_Action_Boolean grabAction; 
-    public SteamVR_Input_Sources handType;
+    //public SteamVR_Action_Boolean grabAction; 
+    //public SteamVR_Input_Sources handType;
 
-    private bool hasDetached = false; //Test
-
+    public bool IsInstalled = false;
+    public bool IsHeld = true; //Test
     private void Update()
     {
         // if (grabAction.GetStateUp(handType)) 
@@ -21,31 +21,30 @@ public class HoldElements : MonoBehaviour
         // {
         //     HoldObject();
         // }
-
+    //
         //Test
-    if(CompareTag("Element")){
         
-    if (transform.parent == null && !hasDetached)
+    if (transform.parent == null && IsHeld || IsInstalled)
     {
         FreeObject();
     }
-    if(transform.parent != null && hasDetached){
+    if(transform.parent != null && !IsHeld){
         HoldObject();
     }
-    }
-}
     
+}
 
     public void FreeObject()
     {
    
             GetComponent<Rigidbody>().isKinematic = false;
-            hasDetached = true;
+            IsHeld = false;
+            IsInstalled = false;
 }
 
     public void HoldObject()
     {
             GetComponent<Rigidbody>().isKinematic = true;
-            hasDetached = false;
+            IsHeld = true;
 }
 }
