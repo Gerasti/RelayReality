@@ -5,9 +5,9 @@ using UnityEngine;
 public class Connections : MonoBehaviour
 {
     private LineRenderer Line;
-    private Transform Hand; // Камера игрока
-    private Transform firstEmpty; // Первый Empty объект
-    private bool isFirstCollision = true; // Флаг для отслеживания первой и второй коллизии
+    private Transform Hand;
+    private Transform firstEmpty;
+    private bool isFirstCollision = true;
 
     void Start()
     {
