@@ -12,6 +12,8 @@ public class ElementsAndSchemes : MonoBehaviour
    public Transform handShiftElement;
    public Transform cameraTransform;
 
+    
+
 private bool schemeH;
 public static bool yChange = false;
 
@@ -20,18 +22,21 @@ public static int yAngles;
 // private Quaternion elementRot;
 
 private void Update(){
-
+    
     if (((cameraTransform.rotation.y >= 0.38f && cameraTransform.rotation.y <= 0.92f) || 
          (cameraTransform.rotation.y >= -0.92f && cameraTransform.rotation.y <= -0.38f)) && !yChange)
     {
         yAngles = 90;
         yChange = true;
     }
-    else
+    else if(((cameraTransform.rotation.y < 0.38f && cameraTransform.rotation.y > -0.38f) || 
+         (cameraTransform.rotation.y > 0.92f) || (cameraTransform.rotation.y < -0.92f)) && yChange)
     {
         yAngles = 0;
         yChange = false;
     }
+        // Debug.Log("ROTATION: "+ cameraTransform.rotation.y);
+        // Debug.Log("CHANGE: "+yChange);
 }
 
     private List<GameObject> elements = new List<GameObject>();
