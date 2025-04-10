@@ -4,9 +4,9 @@ public class EraseModeManager : MonoBehaviour
 {
     private bool eraseModeActive = false;
 
-    public void SetEraseMode(bool active)
+    public void SetEraseMode(bool isActive)
     {
-        eraseModeActive = active;
+        eraseModeActive = isActive;
     }
 
     void Update()
