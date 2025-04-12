@@ -8,6 +8,13 @@ public class HoldElements : MonoBehaviour
     //public SteamVR_Action_Boolean grabAction; 
     //public SteamVR_Input_Sources handType;
     public bool IsHeld = true; //Test
+    bool eraseModeActive;
+    GameObject handShiftElement;
+
+    void Start()
+    {
+        handShiftElement = GameObject.FindWithTag("HandShift");
+    }
     private void Update()
     {
         // if (grabAction.GetStateUp(handType)) 
@@ -20,8 +27,12 @@ public class HoldElements : MonoBehaviour
         //     HoldObject();
         // }
     //
-        //Test
+    eraseModeActive = EraseModeManager.eraseModeActive;
         
+    if (eraseModeActive == true && transform.parent?.gameObject == handShiftElement){
+        Destroy(gameObject);
+        return;
+    }
     if (transform.parent == null && IsHeld)
     {
         FreeObject();

@@ -14,7 +14,7 @@ public class ConnectionManager : MonoBehaviour
         if (!active) firstPoint = null;
     }
 
-    public bool IsConnectModeActive()
+    [SerializeField]private bool IsConnectModeActive()
     {
         return connectModeActive;
     }
