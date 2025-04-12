@@ -23,7 +23,6 @@ public class EraseModeToggleButton : MonoBehaviour
     void ToggleEraseMode()
     {
         isActive = !isActive;
-        Debug.Log("isActive: "+ isActive);
         image.color = isActive ? activeColor : defaultColor;
         if (eraseManager != null)
             eraseManager.SetEraseMode(isActive);

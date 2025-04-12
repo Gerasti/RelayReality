@@ -3,8 +3,8 @@ using UnityEngine.UI;
 
 public class DeleteSchemeButton : MonoBehaviour
 {
-    public float radius = 3f;
-    public float forwardOffset = 2f;
+    [SerializeField]private float radius = 3f;
+    [SerializeField]private float forwardOffset = 2f;
 
     void Start()
     {

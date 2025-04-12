@@ -15,11 +15,9 @@ public class ElementsAndSchemes : MonoBehaviour
     
 
 private bool schemeH;
-public static bool yChange = false;
+[SerializeField]private static bool yChange = false;
 
-public static int yAngles;
-// private Vector3 elementPos;
-// private Quaternion elementRot;
+[SerializeField]private static int yAngles;
 
 private void Update(){
     
@@ -35,8 +33,7 @@ private void Update(){
         yAngles = 0;
         yChange = false;
     }
-        // Debug.Log("ROTATION: "+ cameraTransform.rotation.y);
-        // Debug.Log("CHANGE: "+yChange);
+
 }
 
     private List<GameObject> elements = new List<GameObject>();
@@ -51,18 +48,14 @@ private void Update(){
     }
 
     public void CreateElement(GameObject prefab){
-        //if(hand.childCount == 0){
-            // Debug.Log("1) Elements Position: " + elementPos);
-            //elementPos += new Vector3(0.8f, 0, -1);
-            // Debug.Log("2) Elements Position: " + elementPos);
+
         GameObject newElement = Instantiate(prefab, handShiftElement.position, handShiftElement.rotation);
+         Debug.Log($"Created element: {newElement.name} with tag: {newElement.tag}");
         elements.Add(newElement);
 
         newElement.transform.SetParent(handShiftElement.transform);
         newElement.GetComponent<Rigidbody>().isKinematic = true;
  
-    //  elementPos = hand.position;
-    //    Debug.Log("Renew Elements Position: " + elementPos);
        
     }
 
@@ -72,21 +65,12 @@ private void Update(){
         GameObject newScheme = Instantiate(scheme, hand.position, rotation);
         schemes.Add(newScheme);
 
-  //newScheme.transform.SetParent(hand.transform);
         newScheme.GetComponent<Rigidbody>().isKinematic = true;
     
          Debug.Log("Scheme Position: " + hand.position);
     }
 
-public void DestroyElements(){
 
-foreach(GameObject element in elements){
-
-Destroy(element);
-
-}
-elements.Clear();
-}
 
 public void DestroySchemes(){
 

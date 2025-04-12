@@ -628,6 +628,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -4675723429793058021, guid: 7813cbae2674e1167ade02f42b93054b, type: 3}
+      propertyPath: IsHeld
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2513804228737091116, guid: 7813cbae2674e1167ade02f42b93054b, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.439
@@ -1625,6 +1629,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -4675723429793058021, guid: 7813cbae2674e1167ade02f42b93054b, type: 3}
+      propertyPath: IsHeld
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2513804228737091116, guid: 7813cbae2674e1167ade02f42b93054b, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.921
@@ -2353,6 +2361,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1250313695}
+  - component: {fileID: 1250313696}
   m_Layer: 0
   m_Name: EraseModeManager
   m_TagString: Untagged
@@ -2375,6 +2384,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1250313696
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1250313694}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2cd45d39ce18848cd975b5ece362fed2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1351046122
 GameObject:
   m_ObjectHideFlags: 0
@@ -3083,6 +3104,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -4675723429793058021, guid: 7813cbae2674e1167ade02f42b93054b, type: 3}
+      propertyPath: IsHeld
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2513804228737091116, guid: 7813cbae2674e1167ade02f42b93054b, type: 3}
       propertyPath: m_LocalPosition.x
       value: -2.0951362
@@ -3435,7 +3460,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 109154, guid: dc06161b6d97feb419f45f03b62e14b9, type: 3}
       propertyPath: m_TagString
-      value: HandShift
+      value: Untagged
       objectReference: {fileID: 0}
     - target: {fileID: 429506, guid: dc06161b6d97feb419f45f03b62e14b9, type: 3}
       propertyPath: m_LocalPosition.y
@@ -3649,7 +3674,7 @@ GameObject:
   - component: {fileID: 1925930148}
   m_Layer: 0
   m_Name: Testhand
-  m_TagString: HandShift
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
