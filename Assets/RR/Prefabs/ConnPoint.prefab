@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 6420895029438944995}
   - component: {fileID: 6222171198154839219}
   - component: {fileID: 2632556235768582931}
-  - component: {fileID: 4743235889611324999}
   m_Layer: 0
   m_Name: ConnPoint
   m_TagString: ConnectionPoint
@@ -100,22 +99,9 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.55
+  m_Radius: 0.65
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &4743235889611324999
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 783009841577622651}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4d118eede50c30b5eb9e1314fb7e5f7c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Hand: {fileID: 0}

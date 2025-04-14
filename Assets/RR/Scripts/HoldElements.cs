@@ -7,8 +7,6 @@ public class HoldElements : MonoBehaviour
 {
     //public SteamVR_Action_Boolean grabAction; 
     //public SteamVR_Input_Sources handType;
-
-    public bool IsInstalled = false;
     public bool IsHeld = true; //Test
     private void Update()
     {
@@ -24,12 +22,14 @@ public class HoldElements : MonoBehaviour
     //
         //Test
         
-    if (transform.parent == null && IsHeld || IsInstalled)
+    if (transform.parent == null && IsHeld)
     {
         FreeObject();
+        Debug.Log("IS FREE");
     }
     if(transform.parent != null && !IsHeld){
         HoldObject();
+        Debug.Log("IS HOLD");
     }
     
 }
@@ -39,7 +39,6 @@ public class HoldElements : MonoBehaviour
    
             GetComponent<Rigidbody>().isKinematic = false;
             IsHeld = false;
-            IsInstalled = false;
 }
 
     public void HoldObject()
