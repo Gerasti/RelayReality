@@ -1,10 +1,10 @@
 using UnityEngine;
 using UnityEngine.UI;
-
+using System.Collections.Generic;
 public class DeleteSchemeButton : MonoBehaviour
 {
-    [SerializeField]private float radius = 3f;
-    [SerializeField]private float forwardOffset = 2f;
+    private float radius = 3f;
+    private float forwardOffset = 2f;
 
     void Start()
     {
@@ -34,7 +34,24 @@ public class DeleteSchemeButton : MonoBehaviour
 
         if (nearest != null)
         {
-            Destroy(nearest);
+            EraseModeManager eraseManager = FindObjectOfType<EraseModeManager>();
+
+            foreach(Transform child in nearest.transform)
+            {
+                foreach (Transform grandChild in child)
+                {
+                    if (grandChild.CompareTag("Element"))
+                    {
+                        eraseManager.EraseElement(grandChild.gameObject);
+                    }
+                }
+            }
+
+            ElementsAndSchemes schemesManager = FindObjectOfType<ElementsAndSchemes>();
+            List<GameObject> schemes_buffer = schemesManager.Schemes_buffer;
+            schemes_buffer.Add(nearest);
+
+            nearest.SetActive(false);
         }
     }
 }

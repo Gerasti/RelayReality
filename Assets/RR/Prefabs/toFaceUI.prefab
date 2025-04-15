@@ -3253,8 +3253,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b99e4c57df9866f4d86333f2ccf4b2e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  radius: 3
-  forwardOffset: 2
 --- !u!1 &7630848488372282409
 GameObject:
   m_ObjectHideFlags: 0

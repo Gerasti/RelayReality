@@ -813,8 +813,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbcc94e11d2086a92ac4caa2f0fae810, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lineMaterial: {fileID: 2100000, guid: ceb48f72b3325c74e95838fb760d0ab0, type: 2}
-  lineWidth: 2
+  lineMaterial: {fileID: 2100000, guid: ed8e533a92d37019c92418e97a11bc1b, type: 2}
+  lineWidth: 0.15
+  colorDarkenFactor: 0.85
 --- !u!4 &311400906
 Transform:
   m_ObjectHideFlags: 0
@@ -4001,7 +4002,7 @@ SceneRoots:
   - {fileID: 1791871248}
   - {fileID: 597637145}
   - {fileID: 211695331}
-  - {fileID: 311400906}
   - {fileID: 1499223943}
   - {fileID: 1566362770}
+  - {fileID: 311400906}
   - {fileID: 1250313695}
