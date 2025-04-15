@@ -30,17 +30,19 @@ public class HoldElements : MonoBehaviour
     eraseModeActive = EraseModeManager.eraseModeActive;
         
     if (eraseModeActive == true && transform.parent?.gameObject == handShiftElement){
-        Destroy(gameObject);
+        EraseModeManager eraseManager = FindObjectOfType<EraseModeManager>();
+    if (eraseManager != null)
+    {
+        eraseManager.EraseElement(gameObject);
+    }
         return;
     }
     if (transform.parent == null && IsHeld)
     {
         FreeObject();
-        Debug.Log("IS FREE");
     }
     if(transform.parent != null && !IsHeld){
         HoldObject();
-        Debug.Log("IS HOLD");
     }
     
 }

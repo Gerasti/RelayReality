@@ -8,13 +8,11 @@ public class InstallElements : MonoBehaviour
     {
         if (element.CompareTag("Element") && transform.childCount == 0)
         {
-            Debug.Log("MATCH Cell");
             HoldElements holdElements = element.GetComponent<HoldElements>();
             IsHeld = holdElements.IsHeld;
 
             if (IsHeld)
             {
-                Debug.Log("Cell is held");
                 return;
             }
             Transform elementTransform = element.transform;
