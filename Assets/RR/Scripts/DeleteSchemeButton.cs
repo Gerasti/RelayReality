@@ -48,8 +48,8 @@ public class DeleteSchemeButton : MonoBehaviour
             }
 
             ElementsAndSchemes schemesManager = FindObjectOfType<ElementsAndSchemes>();
-            List<GameObject> schemes_buffer = schemesManager.Schemes_buffer;
-            schemes_buffer.Add(nearest);
+            List<GameObject> SchemesBuffer = schemesManager.SchemesBuffer;
+            SchemesBuffer.Add(nearest);
 
             nearest.SetActive(false);
         }

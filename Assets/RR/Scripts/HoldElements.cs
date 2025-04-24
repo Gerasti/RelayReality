@@ -30,33 +30,45 @@ public class HoldElements : MonoBehaviour
     eraseModeActive = EraseModeManager.eraseModeActive;
         
     if (eraseModeActive == true && transform.parent?.gameObject == handShiftElement){
+
         EraseModeManager eraseManager = FindObjectOfType<EraseModeManager>();
-    if (eraseManager != null)
-    {
-        eraseManager.EraseElement(gameObject);
+            if (eraseManager != null)
+            {
+                eraseManager.EraseElement(gameObject);
+            }
+            return;
+        }
+
+        // Автоматическое освобождение объекта, если его отпустили
+        if (transform.parent == null && IsHeld)
+        {
+            FreeObject();
+        }
+
+        // Автоматическое взятие объекта, если он прикреплён к чему-то
+        if (transform.parent != null && !IsHeld)
+        {
+            HoldObject();
+        }
     }
-        return;
-    }
-    if (transform.parent == null && IsHeld)
-    {
-        FreeObject();
-    }
-    if(transform.parent != null && !IsHeld){
-        HoldObject();
-    }
-    
-}
 
     public void FreeObject()
     {
-   
-            GetComponent<Rigidbody>().isKinematic = false;
-            IsHeld = false;
-}
+        var rb = GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.isKinematic = false;
+        }
+        IsHeld = false;
+    }
 
     public void HoldObject()
     {
-            GetComponent<Rigidbody>().isKinematic = true;
-            IsHeld = true;
-}
+        var rb = GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.isKinematic = true;
+        }
+        IsHeld = true;
+    }
 }

@@ -19,26 +19,53 @@ public class EraseModeManager : MonoBehaviour
         eraseModeActive = isActive;
     }
 
-    public void EraseElement(GameObject elementToErase)
+public void EraseElement(GameObject elementToErase)
+{
+    if (elementToErase != null && elementsManager != null)
     {
-        if (elementToErase != null)
-        {
-            elementToErase.transform.position = new Vector3(0, -100, 0);
-            
-            if (elementsManager != null)
-            {
-                List<GameObject> elements_buffer = elementsManager.Elements_buffer;
-                elements_buffer.Add(elementToErase);
-            }
+        
+        // Get ElementType from element name
+        var elementTypeName = elementToErase.name;
+        ElementsAndSchemes.ElementType type = System.Enum.Parse<ElementsAndSchemes.ElementType>(elementTypeName);
 
-            var rb = elementToErase.GetComponent<Rigidbody>();
-            if (rb != null)
-            {
-                rb.isKinematic = true;
-            }
+        // Add to appropriate buffer based on type
+        switch (type)
+        {
+            case ElementsAndSchemes.ElementType.Power:
+                elementsManager.PowersBuffer.Add(elementToErase);
+                break;
+            case ElementsAndSchemes.ElementType.Resister:
+                elementsManager.ResisterBuffer.Add(elementToErase);
+                break;
+            default:
+                Debug.LogError($"Unknown element type: {type}");
+                return;
+        }
+
+        Transform parent = elementToErase.transform.parent;
+
+        // Отсоединить от схемы, если был установлен
+        if (parent != null && parent.GetComponent<InstallElements>() != null)
+        {
             elementToErase.transform.SetParent(null);
         }
+
+        if (parent == elementsManager.handShiftElement)
+        {
+            elementToErase.SetActive(false);
+            return;
+        }
+
+        var rb = elementToErase.GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.isKinematic = true;
+        }
+
+        elementToErase.transform.position = new Vector3(0, -100, 0);
     }
+}
+
 
     void Update()
     {

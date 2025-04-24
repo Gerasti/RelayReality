@@ -22,11 +22,9 @@ public class LineFollow : MonoBehaviour
 
     if (currentA != lastA || currentB != lastB)
     {
-        // Находим ConnectionManager
         ConnectionManager connectionManager = FindObjectOfType<ConnectionManager>();
         if (connectionManager != null)
         {
-            // Удаляем старую связь
             connectionManager.RemoveConnection(pointA, pointB);
         }
 
@@ -37,13 +35,21 @@ public class LineFollow : MonoBehaviour
 }
 
 
+public void Initialize(Transform newA, Transform newB)
+{
+    pointA = newA;
+    pointB = newB;
+    lr = GetComponent<LineRenderer>();
+    lastA = pointA.position;
+    lastB = pointB.position;
+    UpdateLine();
+}
+
     void UpdateLine()
     {
         Vector3 posA = pointA.position;
         Vector3 posB = pointB.position;
 
-
-        // Проверка всех коллизий между A и B
         RaycastHit[] hits = Physics.RaycastAll(posA, (posB - posA).normalized, Vector3.Distance(posA, posB));
 
         int elementHitCount = 0;
@@ -53,7 +59,6 @@ public class LineFollow : MonoBehaviour
                 elementHitCount++;
         }
 
-        // Если прошли через более чем один элемент — очищаем линию
         if (elementHitCount > 1)
         {
             lr.positionCount = 0;
