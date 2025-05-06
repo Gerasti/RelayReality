@@ -13,8 +13,9 @@ GameObject:
   - component: {fileID: 6275895123880689341}
   - component: {fileID: 4455524985174606203}
   - component: {fileID: 690155877378477252}
+  - component: {fileID: 1788341915264652886}
   m_Layer: 0
-  m_Name: PowerPoint (1)
+  m_Name: Positive
   m_TagString: PowerPoint
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -63,7 +64,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: a3d1e216ec0e58144a0c538e868d6bb0, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -118,8 +119,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aeb25e95272133ef09cf8986cd46c106, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  type: 1
-  voltage: 0
+  type: 0
+--- !u!114 &1788341915264652886
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1256028817315412252}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a8149e2b16e1eddab75d0a36d3acb03, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  U: 5
 --- !u!1 &8265526213637489741
 GameObject:
   m_ObjectHideFlags: 0
@@ -136,6 +149,7 @@ GameObject:
   - component: {fileID: 5332932579873861902}
   - component: {fileID: 4367434904234517377}
   - component: {fileID: 3438511008953199237}
+  - component: {fileID: -8854081221008622615}
   m_Layer: 0
   m_Name: Power
   m_TagString: Element
@@ -153,7 +167,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.25, y: 0.25, z: 0.25}
+  m_LocalScale: {x: 0.25, y: 0.1, z: 0.25}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7576900502852718508}
@@ -178,7 +192,7 @@ MeshRenderer:
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
+  m_DynamicOccludee: 0
   m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 1
@@ -379,6 +393,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   IsHeld: 1
+--- !u!114 &-8854081221008622615
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8265526213637489741}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 783750eec4c41da428b7651515146d14, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  velocityAverageFrames: 5
+  angularVelocityAverageFrames: 11
+  estimateOnAwake: 0
 --- !u!1 &8816918729420029433
 GameObject:
   m_ObjectHideFlags: 0
@@ -392,8 +421,9 @@ GameObject:
   - component: {fileID: 4966445832910884841}
   - component: {fileID: 2607833145104070415}
   - component: {fileID: 6170682343573360799}
+  - component: {fileID: 102020491438959715}
   m_Layer: 0
-  m_Name: PowerPoint
+  m_Name: Negative
   m_TagString: PowerPoint
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -442,7 +472,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 10d962275ea414521b560fe7566e575a, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -498,4 +528,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   type: 1
-  voltage: 0
+--- !u!114 &102020491438959715
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8816918729420029433}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a8149e2b16e1eddab75d0a36d3acb03, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  U: 0

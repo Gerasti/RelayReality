@@ -1,8 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using UnityEngine;
-using System.Collections.Generic;
-using System.Linq; 
 public class ConnectionManager : MonoBehaviour
 {
     public Material lineMaterial;
@@ -16,7 +13,7 @@ public class ConnectionManager : MonoBehaviour
     private bool connectModeActive = false;
     private bool isChangedChain = false;
 
-    private Dictionary<Transform, List<Transform>> connectionMap = new();
+    public Dictionary<Transform, List<Transform>> connectionMap = new();
     private List<GameObject> lines_buffer = new();
     private Dictionary<(Transform, Transform), GameObject> activeLines = new();
 
@@ -42,7 +39,7 @@ public class ConnectionManager : MonoBehaviour
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
-                if (hit.collider.CompareTag("ConnectionPoint"))
+                if (hit.collider.tag.EndsWith("Point"))
                 {
                     if (firstPoint == null)
                     {
@@ -212,170 +209,6 @@ lineFollow.Initialize(pointA, pointB);
     {
         return connectionMap.ContainsKey(point) ? connectionMap[point] : new List<Transform>();
     }
-
-
-
-private void UnificationU()
-{
-    isChangedChain = false;
-    if (connectionMap.Count == 0)
-    {
-        Debug.Log("UnificationU: No connections in map");
-        return;
-    }
-
-    float maxU = 0f;
-    HashSet<Transform> visited = new HashSet<Transform>();
-    Debug.Log("=== Starting UnificationU ===");
-
-    foreach (var startPoint in connectionMap.Keys)
-    {
-        if (visited.Contains(startPoint)) continue;
-
-        List<Transform> connectedComponent = GetConnectedComponent(startPoint);
-        
-        var pointsByLevel = connectedComponent
-            .Select(p => (point: p, level: GetComponentLevel(p, startPoint)))
-            .GroupBy(x => x.level)
-            .OrderBy(g => g.Key);
-
-        // First pass - find max voltage
-        foreach (var levelGroup in pointsByLevel)
-        {
-            Debug.Log($"\nProcessing level {levelGroup.Key} for max voltage:");
-            foreach (var (point, _) in levelGroup)
-            {
-                var pointConnectionData = point.GetComponent<ConnectionData>();
-                if (pointConnectionData != null)
-                {
-                    float oldMaxU = maxU;
-                    maxU = Mathf.Max(maxU, pointConnectionData.U);
-                    if (maxU > oldMaxU)
-                    {
-                        Debug.Log($"New max voltage found: {maxU} in point {point.name} at level {levelGroup.Key}");
-                    }
-                }
-            }
-        }
-
-        // Second pass - propagate max voltage if it was increased
-        if (maxU > 0)        if (maxU > 0)
-        {
-            Debug.Log($"\nPropagating max voltage {maxU} through levels:");
-            foreach (var levelGroup in pointsByLevel)
-            {
-                Debug.Log($"\nSetting voltage for level {levelGroup.Key}:");
-                foreach (var (point, _) in levelGroup)
-                {
-                    var pointConnectionData = point.GetComponent<ConnectionData>();
-                    if (pointConnectionData != null && pointConnectionData.U != maxU)
-                    {
-                        float oldU = pointConnectionData.U;
-                        pointConnectionData.U = maxU;
-                        Debug.Log($"Updated voltage in {point.name}: {oldU} -> {maxU} at level {levelGroup.Key}");
-                    }
-                }
-            }
-        }
-
-        foreach (var point in connectedComponent)
-        {
-            visited.Add(point);
-        }
-    }
-
-    Debug.Log("=== UnificationU Complete ===\n");
-}
-
-private List<Transform> GetConnectedComponent(Transform startPoint)
-{
-    List<Transform> component = new List<Transform>();
-    Dictionary<Transform, int> levelMap = new Dictionary<Transform, int>();
-    Queue<(Transform point, int level)> queue = new Queue<(Transform, int)>();
-
-    // Start with level 0
-    queue.Enqueue((startPoint, 0));
-    levelMap[startPoint] = 0;
-
-    Debug.Log($"\n--- Starting component search from {startPoint.name} (Level 0) ---");
-
-    while (queue.Count > 0)
-    {
-        var (current, level) = queue.Dequeue();
-        component.Add(current);
-        var currentData = current.GetComponent<ConnectionData>();
-        if (currentData != null)
-        {
-            Debug.Log($"Added to component: {current.name} (Level {level}, U={currentData.U})");
-        }
-
-        foreach (var neighbor in GetConnectedPoints(current))
-        {
-            if (!levelMap.ContainsKey(neighbor))
-            {
-                int newLevel = level + 1;
-                levelMap[neighbor] = newLevel;
-                queue.Enqueue((neighbor, newLevel));
-                
-                var neighborData = neighbor.GetComponent<ConnectionData>();
-                if (neighborData != null)
-                {
-                    Debug.Log($"Found new connection: {current.name}(L{level},U={currentData?.U}) -> {neighbor.name}(L{newLevel},U={neighborData.U})");
-                }
-            }
-        }
-    }
-
-    // Print hierarchy
-    PrintHierarchy(startPoint, levelMap, "");
-
-    return component;
-}
-
-private void PrintHierarchy(Transform point, Dictionary<Transform, int> levelMap, string indent)
-{
-    var data = point.GetComponent<ConnectionData>();
-    Debug.Log($"{indent}Level {levelMap[point]}: {point.name} (U={data?.U})");
-    
-    foreach (var neighbor in GetConnectedPoints(point))
-    {
-        if (levelMap[neighbor] > levelMap[point])
-        {
-            PrintHierarchy(neighbor, levelMap, indent + "  ");
-        }
-    }
-}
-
-private int GetComponentLevel(Transform point, Transform root)
-{
-    int level = 0;
-    Queue<(Transform p, int l)> queue = new Queue<(Transform, int)>();
-    queue.Enqueue((root, 0));
-    HashSet<Transform> visited = new HashSet<Transform>();
-
-    while (queue.Count > 0)
-    {
-        var (current, currentLevel) = queue.Dequeue();
-        if (current == point) return currentLevel;
-
-        if (visited.Add(current))
-        {
-            foreach (var neighbor in GetConnectedPoints(current))
-            {
-                queue.Enqueue((neighbor, currentLevel + 1));
-            }
-        }
-    }
-    return level;
-}
-
-void FixedUpdate()
-{
-    if(isChangedChain){
-    Debug.Log("=== FixedUpdate: Starting voltage unification ===");
-    UnificationU();
-    }
-}
 
 
 
