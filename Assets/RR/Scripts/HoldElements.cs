@@ -26,12 +26,13 @@ public class HoldElements : MonoBehaviour
         // {
         //     HoldObject();
         // }
-    //
-    eraseModeActive = EraseModeManager.eraseModeActive;
-        
-    if (eraseModeActive == true && transform.parent?.gameObject == handShiftElement){
+        //
+        eraseModeActive = EraseModeManager.eraseModeActive;
 
-        EraseModeManager eraseManager = FindObjectOfType<EraseModeManager>();
+        if (eraseModeActive == true && transform.parent?.gameObject == handShiftElement)
+        {
+
+            EraseModeManager eraseManager = FindObjectOfType<EraseModeManager>();
             if (eraseManager != null)
             {
                 eraseManager.EraseElement(gameObject);
@@ -39,17 +40,25 @@ public class HoldElements : MonoBehaviour
             return;
         }
 
+
+
+
         // Автоматическое освобождение объекта, если его отпустили
         if (transform.parent == null && IsHeld)
         {
             FreeObject();
+            return;
         }
 
         // Автоматическое взятие объекта, если он прикреплён к чему-то
         if (transform.parent != null && !IsHeld)
         {
             HoldObject();
+            return;
         }
+
+        
+
     }
 
     public void FreeObject()

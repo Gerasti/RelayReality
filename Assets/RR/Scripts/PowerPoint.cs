@@ -1,11 +1,16 @@
 using UnityEngine;
 using System.Collections.Generic;
-using System.Linq; 
+using System.Linq;
+
+
 
 public enum PowerType { Positive, Negative }
 
 public class PowerPoint : MonoBehaviour
 {
+    private Renderer rend;
+    private Material originalMaterial;
+    public Material activeMaterial;
     public PowerType type;
     private ConnectionData connectionData;
     
@@ -14,6 +19,11 @@ public class PowerPoint : MonoBehaviour
 
     private ConnectionManager connectionManager;
     private Dictionary<Transform, List<Transform>> connectionMap;
+    private Dictionary<(Transform from, Transform to), float> lineAnimationOffsets = new();
+    private HashSet<(Transform from, Transform to)> activeAnimatedLines = new();
+private bool isAnimationActive = false;
+
+
 
     private void Start()
     {
@@ -24,11 +34,16 @@ public class PowerPoint : MonoBehaviour
             return;
         }
         connectionData = GetComponent<ConnectionData>();
-    if (connectionData == null)
-    {
-        Debug.Log($"ConnectionData component missing on {gameObject.name}");
-        return;
-    }
+        if (connectionData == null)
+        {
+            Debug.Log($"ConnectionData component missing on {gameObject.name}");
+            return;
+        }
+        rend = GetComponent<Renderer>();
+        if (rend != null)
+        {
+            originalMaterial = rend.material;
+        }
 
         connectionMap = connectionManager.connectionMap;
         previousConnectionMap = new Dictionary<Transform, List<Transform>>();
@@ -63,6 +78,49 @@ private void FixedUpdate()
         return false;
     }
 
+private void Update()
+{
+    if (isAnimationActive)
+    {
+        AnimateLines();
+    }
+}
+
+
+private void AnimateLines()
+{
+    if (connectionManager == null || connectionManager.activeLines == null)
+        return;
+
+    float time = Time.time;
+
+        foreach (var key in activeAnimatedLines)
+        {
+            if (!connectionManager.activeLines.TryGetValue(key, out GameObject lineObj))
+                continue;
+
+            var lr = lineObj.GetComponent<LineRenderer>();
+            if (lr == null)
+                continue;
+
+            if (!lineAnimationOffsets.ContainsKey(key))
+                lineAnimationOffsets[key] = Random.Range(0f, Mathf.PI * 2); // случайный сдвиг
+
+            float offset = lineAnimationOffsets[key];
+            float pulse = Mathf.Abs(Mathf.Sin(time * 2f + offset)); // скорость пульсации
+
+            Color baseColor = activeMaterial.color;
+            Color animatedColor = Color.Lerp(Color.black, baseColor, pulse);
+
+            lr.startColor = animatedColor;
+            lr.endColor = animatedColor;
+        
+        lr.material.color = animatedColor;
+
+    }
+}
+
+
 
     private void UpdatePreviousConnectionMap()
     {
@@ -79,45 +137,75 @@ private void FixedUpdate()
 
         return list1.TrueForAll(t => list2.Contains(t)) && list2.TrueForAll(t => list1.Contains(t));
     }
- 
+
+public void ResetMaterial()
+{
+    if (rend != null && originalMaterial != null)
+    {
+        rend.material = originalMaterial;
+    }
+}
 
     private void TraceLevels(Transform start)
-{
-    levelMap.Clear();
-    var visited = new HashSet<Transform>();
-    var queue = new Queue<Transform>();
-
-    queue.Enqueue(start);
-    visited.Add(start);
-    levelMap[start] = 0;
-
-    while (queue.Count > 0)
     {
-        Transform current = queue.Dequeue();
-        int currentLevel = levelMap[current];
+        levelMap.Clear();
+        var visited = new HashSet<Transform>();
+        var queue = new Queue<Transform>();
 
-        Debug.Log($"Level {currentLevel}: {current.name}");
+        queue.Enqueue(start);
+        visited.Add(start);
+        levelMap[start] = 0;
 
-        if (!connectionMap.TryGetValue(current, out var neighbors))
-            continue;
-
-        foreach (var neighbor in neighbors)
+        while (queue.Count > 0)
         {
-            if (visited.Contains(neighbor))
+            Transform current = queue.Dequeue();
+            int currentLevel = levelMap[current];
+
+            Debug.Log($"Level {currentLevel}: {current.name}");
+
+            if (!connectionMap.TryGetValue(current, out var neighbors))
                 continue;
 
-            visited.Add(neighbor);
-            queue.Enqueue(neighbor);
-            levelMap[neighbor] = currentLevel + 1;
+            foreach (var neighbor in neighbors)
+            {
+                if (visited.Contains(neighbor))
+                    continue;
+
+                visited.Add(neighbor);
+                queue.Enqueue(neighbor);
+                levelMap[neighbor] = currentLevel + 1;
+            }
         }
+if (!ValidatePowerPoints())
+{
+    Debug.Log("PowerPoint validation failed.");
+    
+    isAnimationActive = false;
+
+    connectionManager.SetPulseActiveForAll(false);
+    connectionManager.SetAllLineMaterials(connectionManager.lineMaterial);
+
+    foreach (var t in levelMap.Keys)
+    {
+        var p = t.GetComponent<PowerPoint>();
+        if (p != null)
+            p.ResetMaterial();
     }
-    if (!ValidatePowerPoints())
-        {
-            Debug.Log("Проверка PowerPoint не пройдена.");
-            return;
-        }
-        SetVoltageValues();
+
+    return;
 }
+
+
+
+isAnimationActive = true;
+connectionManager.SetPulseActiveForAll(true);
+SetVoltageValues();
+
+
+
+    }
+
+
 private bool ValidatePowerPoints()
     {
         if (levelMap.Count == 0)
@@ -161,44 +249,58 @@ private bool ValidatePowerPoints()
         return isValid;
     }
 
-    private void SetVoltageValues()
+private void SetVoltageValues()
+{
+    int minLevel = levelMap.Values.Min();
+    int maxLevel = levelMap.Values.Max();
+
+    var positivePowerPoint = levelMap
+        .Where(kvp => kvp.Key.CompareTag("PowerPoint") && kvp.Key.GetComponent<PowerPoint>().type == PowerType.Positive)
+        .Select(kvp => kvp.Key)
+        .FirstOrDefault();
+
+    if (positivePowerPoint == null)
     {
-        int minLevel = levelMap.Values.Min();
-        int maxLevel = levelMap.Values.Max();
+        Debug.Log("Positive PowerPoint not found.");
+        return;
+    }
 
-        // Находим PowerPoint с Positive
-        var positivePowerPoint = levelMap
-            .Where(kvp => kvp.Key.CompareTag("PowerPoint") && kvp.Key.GetComponent<PowerPoint>().type == PowerType.Positive)
-            .Select(kvp => kvp.Key)
-            .FirstOrDefault();
+    var positivePowerPointScript = positivePowerPoint.GetComponent<PowerPoint>();
+    bool isPositiveAtTop = levelMap[positivePowerPoint] == minLevel;
 
-        if (positivePowerPoint == null)
+    float uValue = positivePowerPointScript.connectionData.U;
+    Debug.Log($"Positive is at {(isPositiveAtTop ? "top" : "bottom")}, U = {uValue}");
+
+    // Очистка старых активных линий
+    activeAnimatedLines.Clear();
+
+    foreach (var kvp in levelMap)
+    {
+        Transform from = kvp.Key;
+
+        if (!connectionMap.TryGetValue(from, out var neighbors))
+            continue;
+
+        foreach (var to in neighbors)
         {
-            Debug.Log("PowerPoint с Positive не найден.");
-            return;
-        }
+            if (!levelMap.ContainsKey(to) || levelMap[to] <= levelMap[from])
+                continue;
 
-        var positivePowerPointScript = positivePowerPoint.GetComponent<PowerPoint>();
-        bool isPositiveAtTop = levelMap[positivePowerPoint] == minLevel;
-
-        // Получаем значение U из ConnectionData объекта с Positive
-        float uValue = positivePowerPointScript.connectionData.U;
-
-        Debug.Log($"Positive {(isPositiveAtTop ? "сверху" : "снизу")}, U = {uValue}");
-
-        // Устанавливаем U всем объектам в levelMap
-        foreach (var transform in levelMap.Keys)
-        {
-            var powerPoint = transform.GetComponent<PowerPoint>();
-            if (powerPoint != null && powerPoint.connectionData != null)
+            if (connectionManager.activeLines.TryGetValue((from, to), out GameObject lineObj))
             {
-                powerPoint.connectionData.U = uValue;
-                Debug.Log($"Установлено U = {uValue} для {transform.name}");
-            }
-            else
-            {
-                Debug.Log($"PowerPoint или ConnectionData отсутствует для {transform.name}");
+                var lr = lineObj.GetComponent<LineRenderer>();
+                if (lr != null)
+                {
+                    // вместо прямой установки цвета, добавляем в список для Update()
+                    activeAnimatedLines.Add((from, to));
+
+                    Debug.Log($"Set animated color for line between {from.name} and {to.name}.");
+                }
             }
         }
     }
 }
+
+}
+
+

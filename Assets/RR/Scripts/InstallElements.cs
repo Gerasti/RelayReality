@@ -4,6 +4,7 @@ using UnityEngine;
 public class InstallElements : MonoBehaviour
 {
     bool IsHeld;
+    Vector3 installPosition = new Vector3(0, 3.5f, 0);
     private void OnTriggerEnter(Collider element)
     {
         if (element.CompareTag("Element") && transform.childCount == 0)
@@ -26,7 +27,7 @@ Vector3 originalWorldScale = elementTransform.lossyScale;
         );
         elementTransform.localScale = newLocalScale;
 
-            elementTransform.localPosition = new Vector3(0, 3.5f, 0);
+            elementTransform.localPosition = installPosition;
             elementTransform.rotation = Quaternion.Euler(transform.parent.eulerAngles.x, transform.parent.eulerAngles.y, 0);
 
             Rigidbody rigidbody = elementTransform.GetComponent<Rigidbody>();

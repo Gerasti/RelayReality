@@ -120,6 +120,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   type: 0
+  activeMaterial: {fileID: 2100000, guid: a9585f7eaca0b31989ef15f61a8bae99, type: 2}
 --- !u!114 &1788341915264652886
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -528,6 +529,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   type: 1
+  activeMaterial: {fileID: 2100000, guid: a9585f7eaca0b31989ef15f61a8bae99, type: 2}
 --- !u!114 &102020491438959715
 MonoBehaviour:
   m_ObjectHideFlags: 0
