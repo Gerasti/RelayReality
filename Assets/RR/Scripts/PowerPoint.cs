@@ -246,6 +246,36 @@ private bool ValidatePowerPoints()
             Debug.Log("Недопустимая комбинация PowerType: должен быть Positive и Negative на разных концах.");
         }
 
+        foreach (var node in levelMap.Keys)
+{
+    if (!connectionMap.TryGetValue(node, out var connections))
+    {
+        Debug.Log($"Узел {node.name} не найден в connectionMap.");
+        return false;
+    }
+
+    int connectionCount = connections.Count;
+
+    // PowerPoint может иметь только одно соединение
+    if (node.CompareTag("PowerPoint"))
+    {
+        if (connectionCount < 1)
+        {
+            Debug.Log($"PowerPoint {node.name} должен иметь хотя бы одно соединение.");
+            return false;
+        }
+    }
+    else
+    {
+        if (connectionCount < 2)
+        {
+            Debug.Log($"Узел {node.name} должен иметь как минимум два соединения.");
+            return false;
+        }
+    }
+}
+
+
         return isValid;
     }
 
