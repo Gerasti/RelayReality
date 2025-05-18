@@ -52,26 +52,22 @@ public void Initialize(Transform newA, Transform newB)
     Vector3 posA = pointA.position;
     Vector3 posB = pointB.position;
 
-    // Центр между двумя точками
     Vector3 mid = (posA + posB) / 2f;
 
-    // Направление от A к B
+
     Vector3 direction = (posB - posA).normalized;
 
-    // Вектор, перпендикулярный направлению (в плоскости XY, можно заменить на Cross с Vector3.up если нужно в другой плоскости)
     Vector3 perpendicular = -Vector3.Cross(direction, Vector3.forward).normalized;
 
-    // Модификатор длины дуги
+
     float curveStrength = 0.3f;
 
-    // Контрольная точка — смещённая относительно середины
+
     Vector3 controlPoint = mid + perpendicular * curveStrength;
 
-    // Количество сегментов кривой
     int segments = 20;
     lr.positionCount = segments + 1;
 
-    // Вычисление точек кривой Безье
     for (int i = 0; i <= segments; i++)
     {
         float t = i / (float)segments;

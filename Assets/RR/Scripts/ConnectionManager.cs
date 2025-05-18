@@ -27,7 +27,7 @@ public class ConnectionManager : MonoBehaviour
         timer = 0f;
     }
 
-    public void SetPulseActiveForAll(bool active) { } // отключена система LinePulse
+    public void SetPulseActiveForAll(bool active) { }
 
     void TryAutoConnect(string nameA, string nameB)
     {
