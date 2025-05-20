@@ -335,64 +335,122 @@ public class PowerPoint : MonoBehaviour
         }
 
 
-float totalResistance = CalculateTotalResistance(positivePowerPoint, negativePowerPoint, new HashSet<Transform>());
+        float totalResistance = CalculateTotalResistance(positivePowerPoint, negativePowerPoint, new HashSet<Transform>());
 
-if (totalResistance == 0)
-{
-    Debug.Log("⚠️ Общее сопротивление равно 0, невозможен расчёт тока.");
-    return;
-}
-
-
-float calculatedCurrent = uValue / totalResistance;
-Debug.Log($"[Ohm] Общее сопротивление: {totalResistance:F3}, Расчётный ток I = {calculatedCurrent:F3}");
+        if (totalResistance == 0)
+        {
+            Debug.Log("⚠️ Общее сопротивление равно 0, невозможен расчёт тока.");
+            return;
+        }
 
 
-positivePowerPointScript.connectionData.I = calculatedCurrent;
-negativePowerPointScript.connectionData.I = calculatedCurrent;
+        float calculatedCurrent = uValue / totalResistance;
+        Debug.Log($"[Ohm] Общее сопротивление: {totalResistance:F3}, Расчётный ток I = {calculatedCurrent:F3}");
 
 
-float declaredI = positivePowerPointScript.connectionData.I;
+        positivePowerPointScript.connectionData.I = calculatedCurrent;
+        negativePowerPointScript.connectionData.I = calculatedCurrent;
 
-if (Mathf.Abs(declaredI - calculatedCurrent) < 0.01f)
-    Debug.Log("✅ Закон Ома выполняется.");
-else
-    Debug.Log($"ℹ️ Заданный ток I = {declaredI:F3}, но по расчёту I = {calculatedCurrent:F3}. Обновлён.");
+
+        float declaredI = positivePowerPointScript.connectionData.I;
+
+        if (Mathf.Abs(declaredI - calculatedCurrent) < 0.01f)
+            Debug.Log("✅ Закон Ома выполняется.");
+        else
+            Debug.Log($"ℹ️ Заданный ток I = {declaredI:F3}, но по расчёту I = {calculatedCurrent:F3}. Обновлён.");
+
+CalculateCurrentsForEachElement(positivePowerPoint);
 
 
     }
 
-private float CalculateTotalResistance(Transform current, Transform target, HashSet<Transform> visited)
+private void CalculateCurrentsForEachElement(Transform positivePoint)
 {
-    if (current == target)
-        return 0f;
+    Dictionary<Transform, float> resistanceToElement = new();
+    resistanceToElement[positivePoint] = 0f;
 
-    visited.Add(current);
+    int maxLevel = levelMap.Values.Max();
 
-    if (!connectionMap.TryGetValue(current, out var neighbors))
-        return float.PositiveInfinity;
-
-    List<float> resistances = new();
-
-    foreach (var next in neighbors)
+    for (int level = levelMap[positivePoint] + 1; level <= maxLevel; level++)
     {
-        if (visited.Contains(next))
-            continue;
+        var elementsAtLevel = levelMap.Where(kvp => kvp.Value == level).Select(kvp => kvp.Key).ToList();
 
-        float ownResistance = next.GetComponent<ConnectionData>()?.R ?? 0f;
-        float nextResistance = CalculateTotalResistance(next, target, new HashSet<Transform>(visited));
+        foreach (var current in elementsAtLevel)
+        {
+            if (!connectionMap.TryGetValue(current, out var prevList))
+                continue;
 
-        if (!float.IsInfinity(nextResistance))
-            resistances.Add(ownResistance + nextResistance);
+            // Найти предыдущие узлы с уровнем меньше
+            var incoming = prevList.Where(p => levelMap.ContainsKey(p) && levelMap[p] < level).ToList();
+
+            if (incoming.Count == 0)
+                continue;
+
+            List<float> pathsResistance = new();
+
+            foreach (var from in incoming)
+            {
+                if (!resistanceToElement.TryGetValue(from, out float rToPrev))
+                    continue;
+
+                float ownR = current.GetComponent<ConnectionData>()?.R ?? 0f;
+                pathsResistance.Add(rToPrev + ownR);
+            }
+
+            float totalResistance;
+            if (pathsResistance.Count == 1)
+            {
+                totalResistance = pathsResistance[0]; // Последовательно
+            }
+            else
+            {
+                totalResistance = 1f / pathsResistance.Sum(r => 1f / r); // Параллельно
+            }
+
+            resistanceToElement[current] = totalResistance;
+
+            // Вычисляем ток: I = U / R
+            float voltage = positivePoint.GetComponent<ConnectionData>().U;
+            float currentI = totalResistance > 0 ? voltage / totalResistance : 0f;
+            current.GetComponent<ConnectionData>().I = currentI;
+
+            Debug.Log($"[Element {current.name}] Resistance to here: {totalResistance:F3}, Current I = {currentI:F3}");
+        }
     }
-
-    if (resistances.Count == 0)
-        return float.PositiveInfinity;
-    else if (resistances.Count == 1)
-        return resistances[0];
-    else
-        return 1f / resistances.Sum(r => 1f / r);
 }
+
+
+    private float CalculateTotalResistance(Transform current, Transform target, HashSet<Transform> visited)
+    {
+        if (current == target)
+            return 0f;
+
+        visited.Add(current);
+
+        if (!connectionMap.TryGetValue(current, out var neighbors))
+            return float.PositiveInfinity;
+
+        List<float> resistances = new();
+
+        foreach (var next in neighbors)
+        {
+            if (visited.Contains(next))
+                continue;
+
+            float ownResistance = next.GetComponent<ConnectionData>()?.R ?? 0f;
+            float nextResistance = CalculateTotalResistance(next, target, new HashSet<Transform>(visited));
+
+            if (!float.IsInfinity(nextResistance))
+                resistances.Add(ownResistance + nextResistance);
+        }
+
+        if (resistances.Count == 0)
+            return float.PositiveInfinity;
+        else if (resistances.Count == 1)
+            return resistances[0];
+        else
+            return 1f / resistances.Sum(r => 1f / r);
+    }
 
 
 }

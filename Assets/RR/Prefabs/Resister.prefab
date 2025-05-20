@@ -2322,7 +2322,7 @@ GameObject:
   - component: {fileID: 3520084972349316155}
   m_Layer: 5
   m_Name: CanvasDataPanel
-  m_TagString: Untagged
+  m_TagString: DataPanel
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
