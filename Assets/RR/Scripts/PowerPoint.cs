@@ -27,6 +27,8 @@ public class PowerPoint : MonoBehaviour
 
     private void Start()
     {
+        ConnectionData.OnAnyDataChanged += () => connectionData.dataChanged = true;
+
         connectionManager = FindObjectOfType<ConnectionManager>();
         if (connectionManager == null)
         {
@@ -49,13 +51,19 @@ public class PowerPoint : MonoBehaviour
         previousConnectionMap = new Dictionary<Transform, List<Transform>>();
     }
 
-    private void FixedUpdate()
+private void FixedUpdate()
+{
+    if (connectionMap == null) return;
+
+    if (HasConnectionsChanged() || connectionData.dataChanged)
     {
-        if (connectionMap != null && HasConnectionsChanged())
-        {
-            TraceLevels(transform);
-        }
+        connectionData.dataChanged = false;
+        TraceLevels(transform);
     }
+}
+
+
+
 
     private bool HasConnectionsChanged()
     {
