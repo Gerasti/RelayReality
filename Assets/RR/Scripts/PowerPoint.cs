@@ -13,6 +13,9 @@ public class PowerPoint : MonoBehaviour
     public Material activeMaterial;
     public PowerType type;
     private ConnectionData connectionData;
+    private Transform positivePoint;
+    private Transform negativePoint;
+
 
     private Dictionary<Transform, int> levelMap = new();
     private Dictionary<Transform, List<Transform>> previousConnectionMap;
@@ -23,7 +26,10 @@ public class PowerPoint : MonoBehaviour
     private HashSet<(Transform from, Transform to)> activeAnimatedLines = new();
     private bool isAnimationActive = false;
 
-
+    private void Awake()
+    {
+        ConnectionData.OnAnyDataChanged += RecalculateNetwork;
+    }
 
     private void Start()
     {
@@ -51,19 +57,16 @@ public class PowerPoint : MonoBehaviour
         previousConnectionMap = new Dictionary<Transform, List<Transform>>();
     }
 
-private void FixedUpdate()
-{
-    if (connectionMap == null) return;
-
-    if (HasConnectionsChanged() || connectionData.dataChanged)
+    private void FixedUpdate()
     {
-        connectionData.dataChanged = false;
-        TraceLevels(transform);
+        if (connectionMap == null) return;
+
+        if (HasConnectionsChanged() || connectionData.dataChanged)
+        {
+            TraceLevels(transform);
+            connectionData.dataChanged = false;
+        }
     }
-}
-
-
-
 
     private bool HasConnectionsChanged()
     {
@@ -198,269 +201,357 @@ private void FixedUpdate()
                 var p = t.GetComponent<PowerPoint>();
                 if (p != null)
                     p.ResetMaterial();
+                
             }
 
+                foreach (var kvp in connectionMap)
+    {
+        var data = kvp.Key.GetComponent<ConnectionData>();
+        if (data != null)
+            data.I = 0f;
+    }
+
             return;
+        }
+
+        activeAnimatedLines.Clear();
+        foreach (var from in connectionMap.Keys)
+        {
+            foreach (var to in connectionMap[from])
+            {
+                if (levelMap[to] > levelMap[from])
+                    activeAnimatedLines.Add((from, to));
+            }
         }
 
 
 
         isAnimationActive = true;
         connectionManager.SetPulseActiveForAll(true);
+
         SetVoltageValues();
-
-
 
     }
 
 
     private bool ValidatePowerPoints()
     {
-        if (levelMap.Count == 0)
-            return false;
+        positivePoint = null;
+        negativePoint = null;
 
-        int minLevel = levelMap.Values.Min();
-        int maxLevel = levelMap.Values.Max();
-
-        var firstLevelTransforms = levelMap.Where(kvp => kvp.Value == minLevel).Select(kvp => kvp.Key).ToList();
-        var lastLevelTransforms = levelMap.Where(kvp => kvp.Value == maxLevel).Select(kvp => kvp.Key).ToList();
-
-        var firstPowerPoint = firstLevelTransforms.FirstOrDefault(t => t.CompareTag("PowerPoint"));
-        var lastPowerPoint = lastLevelTransforms.FirstOrDefault(t => t.CompareTag("PowerPoint"));
-
-        if (firstPowerPoint == null || lastPowerPoint == null)
+        foreach (var kvp in levelMap)
         {
-            Debug.Log("На первом или последнем уровне отсутствует PowerPoint.");
-            return false;
-        }
+            var t = kvp.Key;
+            var power = t.GetComponent<PowerPoint>();
+            connectionMap.TryGetValue(t, out var neighbors);
+            int connectionCount = neighbors?.Count ?? 0;
 
-
-        var firstPowerPointScript = firstPowerPoint.GetComponent<PowerPoint>();
-        var lastPowerPointScript = lastPowerPoint.GetComponent<PowerPoint>();
-
-        if (firstPowerPointScript == null || lastPowerPointScript == null)
-        {
-            Debug.Log("Компонент PowerPoint отсутствует на объектах.");
-            return false;
-        }
-
-        bool isValid = (firstPowerPointScript.type == PowerType.Positive && lastPowerPointScript.type == PowerType.Negative) ||
-                       (firstPowerPointScript.type == PowerType.Negative && lastPowerPointScript.type == PowerType.Positive);
-
-        if (!isValid)
-        {
-            Debug.Log("Недопустимая комбинация PowerType: должен быть Positive и Negative на разных концах.");
-        }
-
-        foreach (var node in levelMap.Keys)
-        {
-            if (!connectionMap.TryGetValue(node, out var connections))
+            if (power != null)
             {
-                Debug.Log($"Узел {node.name} не найден в connectionMap.");
-                return false;
-            }
-
-            int connectionCount = connections.Count;
-
-            // PowerPoint может иметь только одно соединение
-            if (node.CompareTag("PowerPoint"))
-            {
-                if (connectionCount < 1)
+                if (power.type == PowerType.Positive)
                 {
-                    Debug.Log($"PowerPoint {node.name} должен иметь хотя бы одно соединение.");
-                    return false;
+                    positivePoint = t;
+                    if (connectionCount < 1)
+                    {
+                        Debug.LogWarning("⚠️ Positive point must have at least one connection.");
+                        return false;
+                    }
+                }
+                else if (power.type == PowerType.Negative)
+                {
+                    negativePoint = t;
+                    if (connectionCount < 1)
+                    {
+                        Debug.LogWarning("⚠️ Negative point must have at least one connection.");
+                        return false;
+                    }
                 }
             }
             else
             {
                 if (connectionCount < 2)
                 {
-                    Debug.Log($"Узел {node.name} должен иметь как минимум два соединения.");
+                    Debug.LogWarning($"⚠️ Element {t.name} must have at least two connections.");
                     return false;
                 }
             }
         }
 
+        if (positivePoint == null || negativePoint == null)
+        {
+            Debug.LogWarning("❌ Positive or Negative PowerPoint not found in chain.");
+            return false;
+        }
 
-        return isValid;
+        // Проверка: Positive должен быть выше Negative
+        int posLevel = levelMap[positivePoint];
+        int negLevel = levelMap[negativePoint];
+
+        if (posLevel > negLevel)
+        {
+            Debug.Log("Positive ниже Negative — инвертируем уровни.");
+            InvertLevelMap();
+        }
+
+        return true;
     }
+
+    private void InvertLevelMap()
+    {
+        int maxLevel = levelMap.Values.Max();
+        var inverted = levelMap.ToDictionary(kvp => kvp.Key, kvp => maxLevel - kvp.Value);
+        levelMap = inverted;
+    }
+
+
 
     private void SetVoltageValues()
     {
-        int minLevel = levelMap.Values.Min();
-        int maxLevel = levelMap.Values.Max();
-
-        var positivePowerPoint = levelMap
-            .Where(kvp => kvp.Key.CompareTag("PowerPoint") && kvp.Key.GetComponent<PowerPoint>().type == PowerType.Positive)
-            .Select(kvp => kvp.Key)
-            .FirstOrDefault();
-
-        var negativePowerPoint = levelMap
-            .Where(kvp => kvp.Key.CompareTag("PowerPoint") && kvp.Key.GetComponent<PowerPoint>().type == PowerType.Negative)
-            .Select(kvp => kvp.Key)
-            .FirstOrDefault();
-
-        if (positivePowerPoint == null || negativePowerPoint == null)
+        if (positivePoint == null)
         {
-            Debug.Log("PowerPoints not found.");
+            Debug.LogError("Positive point is null. Voltage calculation aborted.");
             return;
         }
 
-        var positivePowerPointScript = positivePowerPoint.GetComponent<PowerPoint>();
-        var negativePowerPointScript = negativePowerPoint.GetComponent<PowerPoint>();
+        RecalculateNetwork();
+        ValidateKirchhoffCurrentLaw();
+}
 
-        bool isPositiveAtTop = levelMap[positivePowerPoint] == minLevel;
-        float uValue = positivePowerPointScript.connectionData.U;
-        float iValue = positivePowerPointScript.connectionData.I;
+public void RecalculateNetwork()
+{
+    if (positivePoint == null || negativePoint == null)
+{
+    return;
+}
 
-        Debug.Log($"Positive is at {(isPositiveAtTop ? "top" : "bottom")}, U = {uValue}");
+    if (!connectionMap.ContainsKey(positivePoint) || !connectionMap.ContainsKey(negativePoint))
+            return;
 
-        // Очистка старых активных линий
-        activeAnimatedLines.Clear();
+    List<Transform> nodes = new(connectionMap.Keys);
+    int N = nodes.Count;
+    var nodeIndices = new Dictionary<Transform, int>();
+    for (int i = 0; i < N; i++)
+        nodeIndices[nodes[i]] = i;
 
-        foreach (var kvp in levelMap)
-        {
-            Transform from = kvp.Key;
+    float[,] G = new float[N, N];
+    float[] I = new float[N];
 
-            if (!connectionMap.TryGetValue(from, out var neighbors))
-                continue;
+    foreach (var from in connectionMap)
+    {
 
-            foreach (var to in neighbors)
+        foreach (var to in from.Value)
             {
-                if (!levelMap.ContainsKey(to) || levelMap[to] <= levelMap[from])
+
+                if (!nodeIndices.ContainsKey(from.Key) || !nodeIndices.ContainsKey(to))
                     continue;
 
-                if (connectionManager.activeLines.TryGetValue((from, to), out GameObject lineObj))
+                int i = nodeIndices[from.Key];
+                int j = nodeIndices[to];
+
+                float r = to.GetComponent<ConnectionData>()?.R ?? 1f;
+                if (r < 0.0001f)
                 {
-                    var lr = lineObj.GetComponent<LineRenderer>();
-                    if (lr != null)
-                    {
-                        activeAnimatedLines.Add((from, to));
-                        Debug.Log($"Set animated color for line between {from.name} and {to.name}.");
-                    }
+                    Debug.LogWarning($"⚠️ Very small resistance from {from.Key.name} to {to.name} (r = {r}). Skipping.");
+                    continue;
                 }
+
+                float g = 1f / r;
+
+                G[i, i] += g;
+                G[j, j] += g;
+                G[i, j] -= g;
+                G[j, i] -= g;
+            }
+    }
+
+    int refIndex = nodeIndices[negativePoint];
+    for (int k = 0; k < N; k++)
+        G[refIndex, k] = 0f;
+    G[refIndex, refIndex] = 1f;
+    I[refIndex] = 0f;
+
+    int posIndex = nodeIndices[positivePoint];
+    float voltage = positivePoint.GetComponent<ConnectionData>().U;
+
+    for (int k = 0; k < N; k++)
+        G[posIndex, k] = 0f;
+    G[posIndex, posIndex] = 1f;
+    I[posIndex] = voltage;
+
+    float[] potentials = SolveLinearSystem(G, I);
+
+    for (int i = 0; i < N; i++)
+    {
+        var node = nodes[i];
+        var data = node.GetComponent<ConnectionData>();
+        if (data != null)
+        {
+            data.U = potentials[i];
+            Debug.Log($"[Voltage] {node.name}: U = {data.U:F3} В");
+        }
+    }
+
+    RecalculateCurrents();
+}
+
+
+
+    private void RecalculateCurrents()
+    {
+        HashSet<string> processedConnections = new HashSet<string>();
+
+        foreach (var from in connectionMap)
+        {
+            var fromData = from.Key.GetComponent<ConnectionData>();
+            foreach (var to in from.Value)
+            {
+                var toData = to.GetComponent<ConnectionData>();
+                if (toData == null || fromData == null) continue;
+
+                // Генерация ключа для исключения повторных пар
+                string connectionKey = GetConnectionKey(from.Key, to);
+                if (processedConnections.Contains(connectionKey))
+                    continue;
+
+                processedConnections.Add(connectionKey);
+
+                float r = toData.R;
+                float u1 = fromData.U;
+                float u2 = toData.U;
+
+                if (r < 0.0001f)
+                {
+                    Debug.LogWarning($"⚠️ Очень малое сопротивление между {from.Key.name} и {to.name} (r = {r}). Пропуск.");
+                    continue;
+                }
+
+
+
+                if (u1 <= u2)
+                {
+                    Debug.Log($"[Ток] {from.Key.name} → {to.name}: u1 <= u2 ({u1:F3} <= {u2:F3}) — направление тока неверное. Пропуск.");
+                    continue;
+                }
+
+
+                float i = (u1 - u2) / r;
+
+                toData.I = i;
+
+                Debug.Log($"[Ток] {from.Key.name} → {to.name}: ΔU = {(u1 - u2):F3} В, R = {r:F3} Ом, I = {i:F3} А");
             }
         }
 
+        // var negativeData = negativePoint.GetComponent<ConnectionData>();
+        // var positiveData = positivePoint.GetComponent<ConnectionData>();
 
-        float totalResistance = CalculateTotalResistance(positivePowerPoint, negativePowerPoint, new HashSet<Transform>());
-
-        if (totalResistance == 0)
-        {
-            Debug.Log("⚠️ Общее сопротивление равно 0, невозможен расчёт тока.");
-            return;
-        }
-
-
-        float calculatedCurrent = uValue / totalResistance;
-        Debug.Log($"[Ohm] Общее сопротивление: {totalResistance:F3}, Расчётный ток I = {calculatedCurrent:F3}");
-
-
-        positivePowerPointScript.connectionData.I = calculatedCurrent;
-        negativePowerPointScript.connectionData.I = calculatedCurrent;
-
-
-        float declaredI = positivePowerPointScript.connectionData.I;
-
-        if (Mathf.Abs(declaredI - calculatedCurrent) < 0.01f)
-            Debug.Log("✅ Закон Ома выполняется.");
-        else
-            Debug.Log($"ℹ️ Заданный ток I = {declaredI:F3}, но по расчёту I = {calculatedCurrent:F3}. Обновлён.");
-
-CalculateCurrentsForEachElement(positivePowerPoint);
+        // if (negativeData != null && positiveData != null)
+        // {
+        //     positiveData.I = negativeData.I;
+        //     Debug.Log($"[Копирование тока] {negativePoint.name} → {positivePoint.name}: I = {positiveData.I:F3} А");
+        // }
 
 
     }
 
-private void CalculateCurrentsForEachElement(Transform positivePoint)
+private string GetConnectionKey(Transform a, Transform b)
 {
-    Dictionary<Transform, float> resistanceToElement = new();
-    resistanceToElement[positivePoint] = 0f;
+    int idA = a.GetInstanceID();
+    int idB = b.GetInstanceID();
+    return idA < idB ? $"{idA}-{idB}" : $"{idB}-{idA}";
+}
 
-    int maxLevel = levelMap.Values.Max();
 
-    for (int level = levelMap[positivePoint] + 1; level <= maxLevel; level++)
+    private float[] SolveLinearSystem(float[,] A, float[] b)
     {
-        var elementsAtLevel = levelMap.Where(kvp => kvp.Value == level).Select(kvp => kvp.Key).ToList();
+        int N = b.Length;
+        float[,] M = new float[N, N + 1];
 
-        foreach (var current in elementsAtLevel)
+        for (int i = 0; i < N; i++)
         {
-            if (!connectionMap.TryGetValue(current, out var prevList))
-                continue;
+            for (int j = 0; j < N; j++)
+                M[i, j] = A[i, j];
+            M[i, N] = b[i];
+        }
 
-            // Найти предыдущие узлы с уровнем меньше
-            var incoming = prevList.Where(p => levelMap.ContainsKey(p) && levelMap[p] < level).ToList();
+        for (int i = 0; i < N; i++)
+        {
+            float diag = M[i, i];
+            if (Mathf.Abs(diag) < 1e-6f) continue;
 
-            if (incoming.Count == 0)
-                continue;
+            for (int j = 0; j <= N; j++)
+                M[i, j] /= diag;
 
-            List<float> pathsResistance = new();
-
-            foreach (var from in incoming)
+            for (int k = 0; k < N; k++)
             {
-                if (!resistanceToElement.TryGetValue(from, out float rToPrev))
-                    continue;
+                if (k == i) continue;
+                float factor = M[k, i];
+                for (int j = 0; j <= N; j++)
+                    M[k, j] -= factor * M[i, j];
+            }
+        }
 
-                float ownR = current.GetComponent<ConnectionData>()?.R ?? 0f;
-                pathsResistance.Add(rToPrev + ownR);
+        float[] result = new float[N];
+        for (int i = 0; i < N; i++)
+            result[i] = M[i, N];
+
+        return result;
+    }
+    
+       private void ValidateKirchhoffCurrentLaw()
+    {
+        foreach (var kvp in levelMap)
+        {
+            var node = kvp.Key;
+            var connData = node.GetComponent<ConnectionData>();
+            if (connData == null) continue;
+
+            var powerScript = node.GetComponent<PowerPoint>();
+            if (powerScript != null && (powerScript.type == PowerType.Negative || powerScript.type == PowerType.Positive))
+            {
+                continue;
             }
 
-            float totalResistance;
-            if (pathsResistance.Count == 1)
+            if (!connectionMap.TryGetValue(node, out var neighbors)) continue;
+
+            float incomingSum = 0f;
+            float outgoingSum = 0f;
+
+            foreach (var neighbor in neighbors)
             {
-                totalResistance = pathsResistance[0]; // Последовательно
+                if (!levelMap.ContainsKey(neighbor)) continue;
+
+                var neighborData = neighbor.GetComponent<ConnectionData>();
+                if (neighborData == null) continue;
+
+                if (levelMap[neighbor] < levelMap[node])
+                {
+                    incomingSum += neighborData.I;
+                }
+                else if (levelMap[neighbor] > levelMap[node])
+                {
+                    outgoingSum += neighborData.I;
+                }
+            }
+
+            float difference = Mathf.Abs(incomingSum - outgoingSum);
+            if (difference > 0.01f)
+            {
+                Debug.LogWarning($"[Kirchhoff] Нарушение в узле {node.name}: ∑I_вход = {incomingSum:F3}, ∑I_выход = {outgoingSum:F3}");
             }
             else
             {
-                totalResistance = 1f / pathsResistance.Sum(r => 1f / r); // Параллельно
+                Debug.Log($"[Kirchhoff] Узел {node.name} — закон выполняется: I_вход = I_выход = {incomingSum:F3}");
             }
-
-            resistanceToElement[current] = totalResistance;
-
-            // Вычисляем ток: I = U / R
-            float voltage = positivePoint.GetComponent<ConnectionData>().U;
-            float currentI = totalResistance > 0 ? voltage / totalResistance : 0f;
-            current.GetComponent<ConnectionData>().I = currentI;
-
-            Debug.Log($"[Element {current.name}] Resistance to here: {totalResistance:F3}, Current I = {currentI:F3}");
         }
     }
+
 }
 
 
-    private float CalculateTotalResistance(Transform current, Transform target, HashSet<Transform> visited)
-    {
-        if (current == target)
-            return 0f;
-
-        visited.Add(current);
-
-        if (!connectionMap.TryGetValue(current, out var neighbors))
-            return float.PositiveInfinity;
-
-        List<float> resistances = new();
-
-        foreach (var next in neighbors)
-        {
-            if (visited.Contains(next))
-                continue;
-
-            float ownResistance = next.GetComponent<ConnectionData>()?.R ?? 0f;
-            float nextResistance = CalculateTotalResistance(next, target, new HashSet<Transform>(visited));
-
-            if (!float.IsInfinity(nextResistance))
-                resistances.Add(ownResistance + nextResistance);
-        }
-
-        if (resistances.Count == 0)
-            return float.PositiveInfinity;
-        else if (resistances.Count == 1)
-            return resistances[0];
-        else
-            return 1f / resistances.Sum(r => 1f / r);
-    }
+ 
 
 
-}
+
 
 

@@ -42,6 +42,7 @@ public void Initialize(Transform newA, Transform newB)
     pointA = newA;
     pointB = newB;
     lr = GetComponent<LineRenderer>();
+    lr.widthMultiplier = ConnectionManager.lineWidth;
     lastA = pointA.position;
     lastB = pointB.position;
     UpdateLine();
@@ -53,17 +54,16 @@ public void Initialize(Transform newA, Transform newB)
     Vector3 posB = pointB.position;
 
     Vector3 mid = (posA + posB) / 2f;
-
-
     Vector3 direction = (posB - posA).normalized;
-
     Vector3 perpendicular = -Vector3.Cross(direction, Vector3.forward).normalized;
 
-
-    float curveStrength = 0.3f;
-
-
+    float curveStrength = 0.06f;
     Vector3 controlPoint = mid + perpendicular * curveStrength;
+
+    if (IsLineIntersectingElements(posA, posB))
+    {
+        controlPoint -= Vector3.forward * 0.55f;
+    }
 
     int segments = 20;
     lr.positionCount = segments + 1;
@@ -78,6 +78,33 @@ public void Initialize(Transform newA, Transform newB)
     lastA = posA;
     lastB = posB;
 }
+
+bool IsLineIntersectingElements(Vector3 start, Vector3 end)
+{
+    int segmentCount = 10;
+    for (int i = 0; i < segmentCount; i++)
+    {
+        float t0 = i / (float)segmentCount;
+        float t1 = (i + 1) / (float)segmentCount;
+
+        Vector3 point0 = Vector3.Lerp(start, end, t0);
+        Vector3 point1 = Vector3.Lerp(start, end, t1);
+
+        Vector3 direction = point1 - point0;
+        float distance = direction.magnitude;
+
+        if (Physics.Raycast(point0, direction.normalized, out RaycastHit hit, distance))
+        {
+            if (hit.collider.CompareTag("Element"))
+            {
+                Debug.Log($"Пересечение с объектом: {hit.collider.name}");
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 Vector3 CalculateQuadraticBezierPoint(float t, Vector3 p0, Vector3 p1, Vector3 p2)
 {
     return Mathf.Pow(1 - t, 2) * p0 +

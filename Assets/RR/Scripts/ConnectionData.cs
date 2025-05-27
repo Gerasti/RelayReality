@@ -1,10 +1,11 @@
 using UnityEngine;
 using System;
+using System.Collections.Generic;
+
 
 public class ConnectionData : MonoBehaviour
 {
     public float I = 0.0f;
-    public float U = 0.0f;
 
     public bool dataChanged = false;
 
@@ -19,10 +20,26 @@ public class ConnectionData : MonoBehaviour
             {
                 r = value;
                 dataChanged = true;
-                OnAnyDataChanged?.Invoke(); // сигнал всем PowerPoint
+                OnAnyDataChanged?.Invoke();
+            }
+        }
+    }
+
+    public float U
+    {
+        get => u;
+        set
+        {
+            if (Mathf.Abs(u - value) > 0.01f)
+            {
+                u = value;
+                dataChanged = true;
+                OnAnyDataChanged?.Invoke();
             }
         }
     }
 
     [SerializeField] private float r = 1.0f;
+    [SerializeField] private float u = 0.0f;
+
 }

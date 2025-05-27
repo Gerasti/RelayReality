@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public class ConnectionManager : MonoBehaviour
 {
     public Material lineMaterial;
-    public float lineWidth = 0.005f;
+    public static float lineWidth = 0.08f;
 
     public GameObject firstPoint;
     private bool connectModeActive = false;
@@ -55,6 +55,10 @@ public class ConnectionManager : MonoBehaviour
         }
     }
 
+
+
+
+
     public void ResetSelection()
     {
         if (firstPointRenderer != null)
@@ -86,12 +90,18 @@ public class ConnectionManager : MonoBehaviour
                 Debug.Log("2 seconds passed (manual)");
                 started = false;
 
-                TryAutoConnect("Positive", "ConnPoint3");
-                TryAutoConnect("ConnPoint3", "ConnPoint2");
-                TryAutoConnect("ConnPoint2", "ConnPoint1");
-                TryAutoConnect("ConnPoint2", "ConnPoint");
-                TryAutoConnect("ConnPoint1", "Negative");
+                TryAutoConnect("Positive", "ConnPoint");
+
+                // TryAutoConnect("ConnPoint3", "ConnPoint");
+
+                // TryAutoConnect("ConnPoint3", "ConnPoint2");
+                // TryAutoConnect("ConnPoint2", "ConnPoint1");
+                // TryAutoConnect("ConnPoint2", "ConnPoint");
+                // TryAutoConnect("ConnPoint1", "Negative");
                 TryAutoConnect("ConnPoint", "Negative");
+
+                // TryAutoConnect("ConnPoint4", "Negative");
+                // TryAutoConnect("ConnPoint4", "ConnPoint6");
             }
         }
 
@@ -206,8 +216,6 @@ public void SetAllLineMaterials(Material material)
             lineObj = new GameObject("Line");
             LineRenderer lr = lineObj.AddComponent<LineRenderer>();
             lr.material = new Material(lineMaterial);
-            lr.startWidth = lineWidth;
-            lr.endWidth = lineWidth;
             SetupLineRenderer(lr, pointA.position, pointB.position);
         }
 
@@ -223,20 +231,20 @@ public void SetAllLineMaterials(Material material)
         activeLines[(pointB, pointA)] = lineObj;
     }
 
-    void RegisterConnection(Transform a, Transform b)
-    {
-        if (!connectionMap.ContainsKey(a))
-            connectionMap[a] = new List<Transform>();
+void RegisterConnection(Transform a, Transform b)
+{
+    if (!connectionMap.ContainsKey(a))
+        connectionMap[a] = new List<Transform>();
 
-        if (!connectionMap.ContainsKey(b))
-            connectionMap[b] = new List<Transform>();
+    if (!connectionMap.ContainsKey(b))
+        connectionMap[b] = new List<Transform>();
 
-        if (!connectionMap[a].Contains(b))
-            connectionMap[a].Add(b);
+    if (!connectionMap[a].Contains(b))
+        connectionMap[a].Add(b);
 
-        if (!connectionMap[b].Contains(a))
-            connectionMap[b].Add(a);
-    }
+    if (!connectionMap[b].Contains(a))
+        connectionMap[b].Add(a);
+}
 
     public void RemoveConnection(Transform a, Transform b)
     {

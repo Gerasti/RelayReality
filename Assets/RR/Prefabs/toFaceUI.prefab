@@ -395,8 +395,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 238157e6634ca091e83ca3e7f85c0d0e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  detectionCollider: {fileID: 0}
   source: {fileID: 0}
-  radius: 5
+  rotationSpeed: 5
+  maxVerticalAngle: 30
 --- !u!1 &1300330098629555272
 GameObject:
   m_ObjectHideFlags: 0
@@ -1082,7 +1084,7 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
-  m_PresetInfoIsWorld: 0
+  m_PresetInfoIsWorld: 1
 --- !u!114 &5345251371056602501
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2730,7 +2732,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Horizontal
+  m_Text: Vertical
 --- !u!1 &7063558230906389103
 GameObject:
   m_ObjectHideFlags: 0

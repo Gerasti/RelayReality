@@ -24,22 +24,22 @@ private static bool yChange = false;
 
 public static int yAngles;
 
-private void Update(){
-    // Axis for creation schemes
-    if (((cameraTransform.rotation.y >= 0.38f && cameraTransform.rotation.y <= 0.92f) || 
-         (cameraTransform.rotation.y >= -0.92f && cameraTransform.rotation.y <= -0.38f)) && !yChange)
+private void Update()
+{
+    float yRot = cameraTransform.eulerAngles.y;
+
+    if (((yRot >= 45f && yRot <= 135f) || (yRot >= 225f && yRot <= 315f)) && !yChange)
     {
         yAngles = 90;
         yChange = true;
     }
-    else if(((cameraTransform.rotation.y < 0.38f && cameraTransform.rotation.y > -0.38f) || 
-         (cameraTransform.rotation.y > 0.92f) || (cameraTransform.rotation.y < -0.92f)) && yChange)
+    else if (((yRot < 45f || yRot > 315f) || (yRot > 135f && yRot < 225f)) && yChange)
     {
         yAngles = 0;
         yChange = false;
     }
-
 }
+
 //currentElementList
     [SerializeField] private List<GameObject> resisters = new();
     public List<GameObject> ResisterBuffer => resisters;
@@ -52,6 +52,7 @@ private void Update(){
     public List<GameObject> SchemesBuffer => schemes;
     public void SetSchemeOrientation(bool isHorizontal)
     {
+
         schemeH = isHorizontal;
     }
 
@@ -65,39 +66,44 @@ private void Update(){
         CreateElement(resisterPrefab, ElementType.Resister);
     }
 
-    public void CreateElement(GameObject prefab, ElementType type){
-        
-            List<GameObject> currentElementList = type switch
+public void CreateElement(GameObject prefab, ElementType type)
+{
+    foreach (Transform child in handShiftElement)
+    {
+        if (child.gameObject.activeSelf)
+            return;
+    }
+
+    List<GameObject> currentElementList = type switch
     {
         ElementType.Power => powers,
         ElementType.Resister => resisters,
         _ => throw new System.ArgumentException($"Unsupported element type: {type}")
     };
 
+    GameObject newElement;
 
-        GameObject newElement;
-
-        if (currentElementList.Count > 0)
-        {
-            newElement = currentElementList[^1]; // ^1 — последний элемент
-            currentElementList.RemoveAt(currentElementList.Count - 1);
-            newElement.SetActive(true);
-        }
-        else
-        {
-            newElement = Instantiate(prefab);
-            newElement.name = $"{type}";
-        }
-
-        newElement.transform.SetPositionAndRotation(handShiftElement.position, handShiftElement.rotation);
-        newElement.GetComponent<Rigidbody>().isKinematic = true;
-        newElement.transform.SetParent(handShiftElement);
-
+    if (currentElementList.Count > 0)
+    {
+        newElement = currentElementList[^1];
+        currentElementList.RemoveAt(currentElementList.Count - 1);
+        newElement.SetActive(true);
     }
+    else
+    {
+        newElement = Instantiate(prefab);
+        newElement.name = $"{type}";
+    }
+
+    newElement.transform.SetPositionAndRotation(handShiftElement.position, handShiftElement.rotation);
+    newElement.GetComponent<Rigidbody>().isKinematic = true;
+    newElement.transform.SetParent(handShiftElement);
+}
+
 
     public void CreateScheme(){
 
-        Quaternion rotation = schemeH ? Quaternion.Euler(0, yAngles, 0) : Quaternion.Euler(90, yAngles, 0);
+        Quaternion rotation = schemeH ? Quaternion.Euler(180, yAngles, 0) : Quaternion.Euler(90, yAngles, 0);
         Vector3 position = schemeH ? new Vector3(hand.position.x, hand.position.y-0.6f, hand.position.z) : hand.position;
 
         GameObject newScheme;
