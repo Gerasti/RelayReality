@@ -17,15 +17,19 @@ public class ConnectionDataUI : MonoBehaviour
 
     void Start()
     {
-       // IPlus.onClick.AddListener(() => connectionData.I += 0.5f);
-       // IMinus.onClick.AddListener(() => connectionData.I -= 0.5f);
+        // IPlus.onClick.AddListener(() => connectionData.I += 0.5f);
+        // IMinus.onClick.AddListener(() => connectionData.I -= 0.5f);
 
-UPlus.onClick.AddListener(() => { connectionData.U += 0.5f; connectionData.dataChanged = true; });
-UMinus.onClick.AddListener(() => { connectionData.U -= 0.5f; connectionData.dataChanged = true; });
-
-RPlus.onClick.AddListener(() => { connectionData.R += 0.5f; connectionData.dataChanged = true; });
-RMinus.onClick.AddListener(() => { connectionData.R -= 0.5f; connectionData.dataChanged = true; });
-
+        if (UPlus != null && UMinus != null)
+        {
+            UPlus.onClick.AddListener(() => { connectionData.U += 0.5f; connectionData.dataChanged = true; });
+            UMinus.onClick.AddListener(() => { connectionData.U -= 0.5f; connectionData.dataChanged = true; });
+        }
+        if (RPlus != null && RMinus != null)
+        {
+            RPlus.onClick.AddListener(() => { connectionData.R += 0.5f; connectionData.dataChanged = true; Debug.Log("PLUS R"); });
+            RMinus.onClick.AddListener(() => { connectionData.R -= 0.5f; connectionData.dataChanged = true; Debug.Log("MINUS R"); });
+        }
     }
 
     void Update()

@@ -90,18 +90,14 @@ public class ConnectionManager : MonoBehaviour
                 Debug.Log("2 seconds passed (manual)");
                 started = false;
 
-                TryAutoConnect("Positive", "ConnPoint");
+                TryAutoConnect("Positive", "ConnPoint3");
 
-                // TryAutoConnect("ConnPoint3", "ConnPoint");
-
-                // TryAutoConnect("ConnPoint3", "ConnPoint2");
-                // TryAutoConnect("ConnPoint2", "ConnPoint1");
-                // TryAutoConnect("ConnPoint2", "ConnPoint");
-                // TryAutoConnect("ConnPoint1", "Negative");
+                TryAutoConnect("ConnPoint3", "ConnPoint2");
+                TryAutoConnect("ConnPoint2", "ConnPoint1");
+                TryAutoConnect("ConnPoint2", "ConnPoint");
+                TryAutoConnect("ConnPoint1", "Negative");
                 TryAutoConnect("ConnPoint", "Negative");
 
-                // TryAutoConnect("ConnPoint4", "Negative");
-                // TryAutoConnect("ConnPoint4", "ConnPoint6");
             }
         }
 

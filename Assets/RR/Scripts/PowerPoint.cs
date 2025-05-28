@@ -201,15 +201,15 @@ public class PowerPoint : MonoBehaviour
                 var p = t.GetComponent<PowerPoint>();
                 if (p != null)
                     p.ResetMaterial();
-                
+
             }
 
-                foreach (var kvp in connectionMap)
-    {
-        var data = kvp.Key.GetComponent<ConnectionData>();
-        if (data != null)
-            data.I = 0f;
-    }
+            foreach (var kvp in connectionMap)
+            {
+                var data = kvp.Key.GetComponent<ConnectionData>();
+                if (data != null)
+                    data.I = 0f;
+            }
 
             return;
         }
@@ -315,151 +315,164 @@ public class PowerPoint : MonoBehaviour
 
         RecalculateNetwork();
         ValidateKirchhoffCurrentLaw();
-}
-
-public void RecalculateNetwork()
-{
-    if (positivePoint == null || negativePoint == null)
-{
-    return;
-}
-
-    if (!connectionMap.ContainsKey(positivePoint) || !connectionMap.ContainsKey(negativePoint))
-            return;
-
-    List<Transform> nodes = new(connectionMap.Keys);
-    int N = nodes.Count;
-    var nodeIndices = new Dictionary<Transform, int>();
-    for (int i = 0; i < N; i++)
-        nodeIndices[nodes[i]] = i;
-
-    float[,] G = new float[N, N];
-    float[] I = new float[N];
-
-    foreach (var from in connectionMap)
-    {
-
-        foreach (var to in from.Value)
-            {
-
-                if (!nodeIndices.ContainsKey(from.Key) || !nodeIndices.ContainsKey(to))
-                    continue;
-
-                int i = nodeIndices[from.Key];
-                int j = nodeIndices[to];
-
-                float r = to.GetComponent<ConnectionData>()?.R ?? 1f;
-                if (r < 0.0001f)
-                {
-                    Debug.LogWarning($"⚠️ Very small resistance from {from.Key.name} to {to.name} (r = {r}). Skipping.");
-                    continue;
-                }
-
-                float g = 1f / r;
-
-                G[i, i] += g;
-                G[j, j] += g;
-                G[i, j] -= g;
-                G[j, i] -= g;
-            }
     }
 
-    int refIndex = nodeIndices[negativePoint];
-    for (int k = 0; k < N; k++)
-        G[refIndex, k] = 0f;
-    G[refIndex, refIndex] = 1f;
-    I[refIndex] = 0f;
-
-    int posIndex = nodeIndices[positivePoint];
-    float voltage = positivePoint.GetComponent<ConnectionData>().U;
-
-    for (int k = 0; k < N; k++)
-        G[posIndex, k] = 0f;
-    G[posIndex, posIndex] = 1f;
-    I[posIndex] = voltage;
-
-    float[] potentials = SolveLinearSystem(G, I);
-
-    for (int i = 0; i < N; i++)
+    public void RecalculateNetwork()
     {
-        var node = nodes[i];
-        var data = node.GetComponent<ConnectionData>();
-        if (data != null)
+        if (negativePoint == null)
         {
-            data.U = potentials[i];
-            Debug.Log($"[Voltage] {node.name}: U = {data.U:F3} В");
+            return;
+        }
+
+        if (!connectionMap.ContainsKey(positivePoint) || !connectionMap.ContainsKey(negativePoint))
+            return;
+
+        List<Transform> nodes = new(connectionMap.Keys);
+        int N = nodes.Count;
+        var nodeIndices = new Dictionary<Transform, int>();
+        for (int i = 0; i < N; i++)
+            nodeIndices[nodes[i]] = i;
+
+        float[,] G = new float[N, N];
+        float[] I = new float[N];
+
+    foreach(var from in connectionMap)
+    {
+        foreach(var to in from.Value)
+        {
+            if(!nodeIndices.ContainsKey(from.Key) || !nodeIndices.ContainsKey(to))
+                continue;
+
+            int i = nodeIndices[from.Key];
+            int j = nodeIndices[to];
+
+            // Новый расчет с учетом типа соединения
+            float r = CalculateEffectiveResistance(from.Key, to);
+            
+            if(r < 0.0001f)
+            {
+                Debug.LogWarning($"⚠️ Very small resistance from {from.Key.name} to {to.name} (r = {r}). Skipping.");
+                continue;
+            }
+
+            float g = 1f / r;
+
+            G[i, i] += g;
+            G[j, j] += g;
+            G[i, j] -= g;
+            G[j, i] -= g;
         }
     }
 
-    RecalculateCurrents();
-}
+        int refIndex = nodeIndices[negativePoint];
+        for (int k = 0; k < N; k++)
+            G[refIndex, k] = 0f;
+        G[refIndex, refIndex] = 1f;
+        I[refIndex] = 0f;
 
+        int posIndex = nodeIndices[positivePoint];
+        float voltage = positivePoint.GetComponent<ConnectionData>().U;
 
+        for (int k = 0; k < N; k++)
+            G[posIndex, k] = 0f;
+        G[posIndex, posIndex] = 1f;
+        I[posIndex] = voltage;
 
-    private void RecalculateCurrents()
-    {
-        HashSet<string> processedConnections = new HashSet<string>();
+        float[] potentials = SolveLinearSystem(G, I);
 
-        foreach (var from in connectionMap)
+        for (int i = 0; i < N; i++)
         {
-            var fromData = from.Key.GetComponent<ConnectionData>();
+            var node = nodes[i];
+            var data = node.GetComponent<ConnectionData>();
+            if (data != null)
+            {
+                data.U = potentials[i];
+                Debug.Log($"[Voltage] {node.name}: U = {data.U:F3} В");
+            }
+        }
+
+        RecalculateCurrents();
+    }
+
+
+
+private void RecalculateCurrents()
+{
+    HashSet<string> processedConnections = new();
+
+    foreach(var from in connectionMap)
+    {
+        var fromData = from.Key.GetComponent<ConnectionData>();
+        if(fromData == null) continue;
+
             foreach (var to in from.Value)
             {
-                var toData = to.GetComponent<ConnectionData>();
-                if (toData == null || fromData == null) continue;
 
-                // Генерация ключа для исключения повторных пар
+                var toData = to.GetComponent<ConnectionData>();
+                if (toData == null) continue;
+
+
+
                 string connectionKey = GetConnectionKey(from.Key, to);
                 if (processedConnections.Contains(connectionKey))
                     continue;
 
                 processedConnections.Add(connectionKey);
 
-                float r = toData.R;
+                ConnectionType connType = GetConnectionType(from.Key, to);
+                float rFrom = fromData.R;
+                float rTo = toData.R;
+                float totalR;
+
+                if (connType == ConnectionType.Sequential)
+                {
+                    totalR = rFrom + rTo;
+                }
+                else // Parallel
+                {
+                    totalR = (rFrom * rTo) / (rFrom + rTo);
+                }
+
                 float u1 = fromData.U;
                 float u2 = toData.U;
 
-                if (r < 0.0001f)
+                if (totalR < 0.0001f)
                 {
-                    Debug.LogWarning($"⚠️ Очень малое сопротивление между {from.Key.name} и {to.name} (r = {r}). Пропуск.");
+                    Debug.LogWarning($"⚠️ Очень малое сопротивление между {from.Key.name} и {to.name} (r = {totalR}). Пропуск.");
                     continue;
+                }
+
+                if (u1 <= u2) continue;
+
+                float i = (u1 - u2) / totalR;
+
+                // Для параллельных соединений ток распределяется
+                if (connType == ConnectionType.Parallel)
+                {
+                    fromData.I = i * (rTo / (rFrom + rTo));
+                    toData.I = i * (rFrom / (rFrom + rTo));
+                }
+                else
+                {
+                    fromData.I = i;
+                    toData.I = i;
                 }
 
 
 
-                if (u1 <= u2)
-                {
-                    Debug.Log($"[Ток] {from.Key.name} → {to.name}: u1 <= u2 ({u1:F3} <= {u2:F3}) — направление тока неверное. Пропуск.");
-                    continue;
-                }
-
-
-                float i = (u1 - u2) / r;
-
-                toData.I = i;
-
-                Debug.Log($"[Ток] {from.Key.name} → {to.name}: ΔU = {(u1 - u2):F3} В, R = {r:F3} Ом, I = {i:F3} А");
-            }
+                Debug.Log($"[{connType}] {from.Key.name} → {to.name}: R={totalR:F3}, I={i:F3}");
+                
+            
         }
-
-        // var negativeData = negativePoint.GetComponent<ConnectionData>();
-        // var positiveData = positivePoint.GetComponent<ConnectionData>();
-
-        // if (negativeData != null && positiveData != null)
-        // {
-        //     positiveData.I = negativeData.I;
-        //     Debug.Log($"[Копирование тока] {negativePoint.name} → {positivePoint.name}: I = {positiveData.I:F3} А");
-        // }
-
-
     }
-
-private string GetConnectionKey(Transform a, Transform b)
-{
-    int idA = a.GetInstanceID();
-    int idB = b.GetInstanceID();
-    return idA < idB ? $"{idA}-{idB}" : $"{idB}-{idA}";
 }
+
+    private string GetConnectionKey(Transform a, Transform b)
+    {
+        int idA = a.GetInstanceID();
+        int idB = b.GetInstanceID();
+        return idA < idB ? $"{idA}-{idB}" : $"{idB}-{idA}";
+    }
 
 
     private float[] SolveLinearSystem(float[,] A, float[] b)
@@ -497,8 +510,8 @@ private string GetConnectionKey(Transform a, Transform b)
 
         return result;
     }
-    
-       private void ValidateKirchhoffCurrentLaw()
+
+    private void ValidateKirchhoffCurrentLaw()
     {
         foreach (var kvp in levelMap)
         {
@@ -545,6 +558,82 @@ private string GetConnectionKey(Transform a, Transform b)
             }
         }
     }
+
+private ConnectionType GetConnectionType(Transform from, Transform to)
+{
+    // Проверка на последовательное соединение по уровням
+    if (Mathf.Abs(levelMap[from] - levelMap[to]) != 1)
+        return ConnectionType.Sequential;
+
+    // Поиск параллельных соединений через одинаковые from/to
+    bool isParallel = CheckParallelByCommonNode(from, to);
+
+    return isParallel ? ConnectionType.Parallel : ConnectionType.Sequential;
+}
+
+private bool CheckParallelByCommonNode(Transform from, Transform to)
+{
+    // Случай 1: Несколько узлов идут из одного from (параллельные исходящие)
+    if (connectionMap[from].Count(n => n != to && levelMap[n] == levelMap[to]) > 0)
+    {
+        return true;
+    }
+
+    // Случай 2: Несколько узлов сходятся в один to (параллельные входящие)
+    if (connectionMap.Keys.Count(n => 
+            n != from && 
+            levelMap[n] == levelMap[from] && 
+            connectionMap[n].Contains(to)) > 0)
+    {
+        return true;
+    }
+
+        // Случай 3: Общий маршрут через промежуточные узлы
+        return false;
+}
+
+
+
+
+
+private Transform FindCommonHigherNeighbor(Transform nodeA, Transform nodeB)
+{
+    // Получаем всех соседей nodeA, которые выше на 1 уровень
+    var higherNeighborsA = connectionMap[nodeA]
+        .Where(n => levelMap[n] == levelMap[nodeA] - 1)
+        .ToList();
+
+    // Получаем всех соседей nodeB, которые выше на 1 уровень
+    var higherNeighborsB = connectionMap[nodeB]
+        .Where(n => levelMap[n] == levelMap[nodeB] - 1)
+        .ToList();
+
+    // Находим пересечение (общих соседей выше)
+    return higherNeighborsA.Intersect(higherNeighborsB).FirstOrDefault();
+}
+
+
+    private enum ConnectionType { Sequential, Parallel }
+
+private float CalculateEffectiveResistance(Transform from, Transform to)
+{
+    float rFrom = from.GetComponent<ConnectionData>()?.R ?? 1f;
+    float rTo = to.GetComponent<ConnectionData>()?.R ?? 1f;
+    
+    switch(GetConnectionType(from, to))
+    {
+        case ConnectionType.Sequential:
+            // Для последовательного - сумма сопротивлений
+            return rFrom + rTo;
+            
+        case ConnectionType.Parallel:
+            // Для параллельного - по формуле параллельных сопротивлений
+            return (rFrom * rTo) / (rFrom + rTo);
+            
+        default:
+            return rFrom + rTo; // по умолчанию последовательное
+    }
+}
 
 }
 

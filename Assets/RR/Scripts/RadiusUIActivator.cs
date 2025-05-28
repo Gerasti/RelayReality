@@ -99,7 +99,7 @@ if (!panel.gameObject.activeSelf)
     panel.gameObject.SetActive(true);
 
 SmoothLookAt(panel, source);
-AdjustPanelPosition(panel, originalPanelPositions[panel], source.position, 0.5f);
+AdjustPanelPosition(panel, originalPanelPositions[panel], source.position, 1f);
 
                 dataPanelCount++;
             }
