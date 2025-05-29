@@ -9,6 +9,7 @@ TagManager:
   - ConnectionPoint
   - Scheme
   - PowerPoint
+  - DataPanel
   layers:
   - Default
   - TransparentFX

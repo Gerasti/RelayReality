@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public class ConnectionManager : MonoBehaviour
 {
     public Material lineMaterial;
-    public float lineWidth = 0.005f;
+    public static float lineWidth = 0.08f;
 
     public GameObject firstPoint;
     private bool connectModeActive = false;
@@ -27,7 +27,7 @@ public class ConnectionManager : MonoBehaviour
         timer = 0f;
     }
 
-    public void SetPulseActiveForAll(bool active) { } // отключена система LinePulse
+    public void SetPulseActiveForAll(bool active) { }
 
     void TryAutoConnect(string nameA, string nameB)
     {
@@ -54,6 +54,10 @@ public class ConnectionManager : MonoBehaviour
             Debug.Log($"Connection already exists: {nameA} <-> {nameB}");
         }
     }
+
+
+
+
 
     public void ResetSelection()
     {
@@ -87,11 +91,13 @@ public class ConnectionManager : MonoBehaviour
                 started = false;
 
                 TryAutoConnect("Positive", "ConnPoint3");
+
                 TryAutoConnect("ConnPoint3", "ConnPoint2");
                 TryAutoConnect("ConnPoint2", "ConnPoint1");
                 TryAutoConnect("ConnPoint2", "ConnPoint");
                 TryAutoConnect("ConnPoint1", "Negative");
                 TryAutoConnect("ConnPoint", "Negative");
+
             }
         }
 
@@ -206,8 +212,6 @@ public void SetAllLineMaterials(Material material)
             lineObj = new GameObject("Line");
             LineRenderer lr = lineObj.AddComponent<LineRenderer>();
             lr.material = new Material(lineMaterial);
-            lr.startWidth = lineWidth;
-            lr.endWidth = lineWidth;
             SetupLineRenderer(lr, pointA.position, pointB.position);
         }
 
@@ -223,20 +227,20 @@ public void SetAllLineMaterials(Material material)
         activeLines[(pointB, pointA)] = lineObj;
     }
 
-    void RegisterConnection(Transform a, Transform b)
-    {
-        if (!connectionMap.ContainsKey(a))
-            connectionMap[a] = new List<Transform>();
+void RegisterConnection(Transform a, Transform b)
+{
+    if (!connectionMap.ContainsKey(a))
+        connectionMap[a] = new List<Transform>();
 
-        if (!connectionMap.ContainsKey(b))
-            connectionMap[b] = new List<Transform>();
+    if (!connectionMap.ContainsKey(b))
+        connectionMap[b] = new List<Transform>();
 
-        if (!connectionMap[a].Contains(b))
-            connectionMap[a].Add(b);
+    if (!connectionMap[a].Contains(b))
+        connectionMap[a].Add(b);
 
-        if (!connectionMap[b].Contains(a))
-            connectionMap[b].Add(a);
-    }
+    if (!connectionMap[b].Contains(a))
+        connectionMap[b].Add(a);
+}
 
     public void RemoveConnection(Transform a, Transform b)
     {

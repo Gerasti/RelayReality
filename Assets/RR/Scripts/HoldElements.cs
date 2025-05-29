@@ -5,9 +5,7 @@ using Valve.VR;
 
 public class HoldElements : MonoBehaviour
 {
-    //public SteamVR_Action_Boolean grabAction; 
-    //public SteamVR_Input_Sources handType;
-    public bool IsHeld = true; //Test
+    public bool IsHeld = true;
     bool eraseModeActive;
     GameObject handShiftElement;
 
@@ -17,16 +15,6 @@ public class HoldElements : MonoBehaviour
     }
     private void Update()
     {
-        // if (grabAction.GetStateUp(handType)) 
-        // {
-        //     FreeObject();
-        // }
-
-        // if (grabAction.GetStateDown(handType)) 
-        // {
-        //     HoldObject();
-        // }
-        //
         eraseModeActive = EraseModeManager.eraseModeActive;
 
         if (eraseModeActive == true && transform.parent?.gameObject == handShiftElement)
@@ -40,17 +28,12 @@ public class HoldElements : MonoBehaviour
             return;
         }
 
-
-
-
-        // Автоматическое освобождение объекта, если его отпустили
         if (transform.parent == null && IsHeld)
         {
             FreeObject();
             return;
         }
 
-        // Автоматическое взятие объекта, если он прикреплён к чему-то
         if (transform.parent != null && !IsHeld)
         {
             HoldObject();
