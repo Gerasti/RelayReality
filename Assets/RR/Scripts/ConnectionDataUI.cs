@@ -7,7 +7,6 @@ public class ConnectionDataUI : MonoBehaviour
     public ConnectionData connectionData;
 
     public TextMeshProUGUI IText;
-   // public Button IPlus, IMinus;
 
     public TextMeshProUGUI UText;
     public Button UPlus, UMinus;
@@ -17,8 +16,6 @@ public class ConnectionDataUI : MonoBehaviour
 
     void Start()
     {
-        // IPlus.onClick.AddListener(() => connectionData.I += 0.5f);
-        // IMinus.onClick.AddListener(() => connectionData.I -= 0.5f);
 
         if (UPlus != null && UMinus != null)
         {

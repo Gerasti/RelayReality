@@ -97,7 +97,7 @@ bool IsLineIntersectingElements(Vector3 start, Vector3 end)
         {
             if (hit.collider.CompareTag("Element"))
             {
-                Debug.Log($"Пересечение с объектом: {hit.collider.name}");
+                Debug.Log($"Intersect: {hit.collider.name}");
                 return true;
             }
         }

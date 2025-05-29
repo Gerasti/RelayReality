@@ -24,11 +24,9 @@ public void EraseElement(GameObject elementToErase)
     if (elementToErase != null && elementsManager != null)
     {
         
-        // Get ElementType from element name
         var elementTypeName = elementToErase.name;
         ElementsAndSchemes.ElementType type = System.Enum.Parse<ElementsAndSchemes.ElementType>(elementTypeName);
 
-        // Add to appropriate buffer based on type
         switch (type)
         {
             case ElementsAndSchemes.ElementType.Power:
@@ -44,7 +42,6 @@ public void EraseElement(GameObject elementToErase)
 
         Transform parent = elementToErase.transform.parent;
 
-        // Отсоединить от схемы, если был установлен
         if (parent != null && parent.GetComponent<InstallElements>() != null)
         {
             elementToErase.transform.SetParent(null);
@@ -78,16 +75,6 @@ public void EraseElement(GameObject elementToErase)
             {
                 if (hit.collider.CompareTag("Element"))
                 {
-
-                    // Interactable interactable = hit.collider.GetComponent<Interactable>();
-                    // if (interactable != null)
-                    // {
-                    //     Hand hand = interactable.attachedToHand;
-                    //     if (hand != null)
-                    //     {
-                    //         hand.DetachObject(hit.collider.gameObject);
-                    //     }
-                    // }
                     EraseElement(hit.collider.gameObject);
                 }
             }

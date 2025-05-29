@@ -37,7 +37,6 @@ public class InstallElements : MonoBehaviour
             {
 
                 elementTransform.localRotation = Quaternion.Euler(0f, 0f, 0f);
-                Debug.Log("Родитель повернут на 180, устанавливаем локальный Z = 0");
             }
             else
             {

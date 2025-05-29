@@ -115,10 +115,10 @@ public class PowerPoint : MonoBehaviour
                 continue;
 
             if (!lineAnimationOffsets.ContainsKey(key))
-                lineAnimationOffsets[key] = Random.Range(0f, Mathf.PI * 2); // случайный сдвиг
+                lineAnimationOffsets[key] = Random.Range(0f, Mathf.PI * 2); 
 
             float offset = lineAnimationOffsets[key];
-            float pulse = Mathf.Abs(Mathf.Sin(time * 2f + offset)); // скорость пульсации
+            float pulse = Mathf.Abs(Mathf.Sin(time * 2f + offset));
 
             Color baseColor = activeMaterial.color;
             Color animatedColor = Color.Lerp(Color.black, baseColor, pulse);
@@ -253,7 +253,7 @@ public class PowerPoint : MonoBehaviour
                     positivePoint = t;
                     if (connectionCount < 1)
                     {
-                        Debug.LogWarning("⚠️ Positive point must have at least one connection.");
+                        Debug.LogWarning("Positive point must have at least one connection.");
                         return false;
                     }
                 }
@@ -262,7 +262,7 @@ public class PowerPoint : MonoBehaviour
                     negativePoint = t;
                     if (connectionCount < 1)
                     {
-                        Debug.LogWarning("⚠️ Negative point must have at least one connection.");
+                        Debug.LogWarning("Negative point must have at least one connection.");
                         return false;
                     }
                 }
@@ -271,7 +271,7 @@ public class PowerPoint : MonoBehaviour
             {
                 if (connectionCount < 2)
                 {
-                    Debug.LogWarning($"⚠️ Element {t.name} must have at least two connections.");
+                    Debug.LogWarning($"Element {t.name} must have at least two connections.");
                     return false;
                 }
             }
@@ -279,17 +279,15 @@ public class PowerPoint : MonoBehaviour
 
         if (positivePoint == null || negativePoint == null)
         {
-            Debug.LogWarning("❌ Positive or Negative PowerPoint not found in chain.");
+            Debug.LogWarning("Positive or Negative PowerPoint not found in chain.");
             return false;
         }
 
-        // Проверка: Positive должен быть выше Negative
         int posLevel = levelMap[positivePoint];
         int negLevel = levelMap[negativePoint];
 
         if (posLevel > negLevel)
         {
-            Debug.Log("Positive ниже Negative — инвертируем уровни.");
             InvertLevelMap();
         }
 
@@ -346,12 +344,11 @@ public class PowerPoint : MonoBehaviour
             int i = nodeIndices[from.Key];
             int j = nodeIndices[to];
 
-            // Новый расчет с учетом типа соединения
             float r = CalculateEffectiveResistance(from.Key, to);
             
             if(r < 0.0001f)
             {
-                Debug.LogWarning($"⚠️ Very small resistance from {from.Key.name} to {to.name} (r = {r}). Skipping.");
+                Debug.LogWarning($"Very small resistance from {from.Key.name} to {to.name} (r = {r}). Skipping.");
                 continue;
             }
 
@@ -438,7 +435,6 @@ private void RecalculateCurrents()
 
                 if (totalR < 0.0001f)
                 {
-                    Debug.LogWarning($"⚠️ Очень малое сопротивление между {from.Key.name} и {to.name} (r = {totalR}). Пропуск.");
                     continue;
                 }
 
@@ -446,7 +442,6 @@ private void RecalculateCurrents()
 
                 float i = (u1 - u2) / totalR;
 
-                // Для параллельных соединений ток распределяется
                 if (connType == ConnectionType.Parallel)
                 {
                     fromData.I = i * (rTo / (rFrom + rTo));
@@ -550,22 +545,21 @@ private void RecalculateCurrents()
             float difference = Mathf.Abs(incomingSum - outgoingSum);
             if (difference > 0.01f)
             {
-                Debug.LogWarning($"[Kirchhoff] Нарушение в узле {node.name}: ∑I_вход = {incomingSum:F3}, ∑I_выход = {outgoingSum:F3}");
+              Debug.LogWarning($"[Kirchhoff] Current imbalance detected at node {node.name}: ∑I_in = {incomingSum:F3}, ∑I_out = {outgoingSum:F3}");
             }
             else
             {
-                Debug.Log($"[Kirchhoff] Узел {node.name} — закон выполняется: I_вход = I_выход = {incomingSum:F3}");
+            Debug.Log($"[Kirchhoff] Node {node.name} — law holds: I_in = I_out = {incomingSum:F3}");
+
             }
         }
     }
 
 private ConnectionType GetConnectionType(Transform from, Transform to)
 {
-    // Проверка на последовательное соединение по уровням
     if (Mathf.Abs(levelMap[from] - levelMap[to]) != 1)
         return ConnectionType.Sequential;
 
-    // Поиск параллельных соединений через одинаковые from/to
     bool isParallel = CheckParallelByCommonNode(from, to);
 
     return isParallel ? ConnectionType.Parallel : ConnectionType.Sequential;
@@ -573,13 +567,11 @@ private ConnectionType GetConnectionType(Transform from, Transform to)
 
 private bool CheckParallelByCommonNode(Transform from, Transform to)
 {
-    // Случай 1: Несколько узлов идут из одного from (параллельные исходящие)
     if (connectionMap[from].Count(n => n != to && levelMap[n] == levelMap[to]) > 0)
     {
         return true;
     }
 
-    // Случай 2: Несколько узлов сходятся в один to (параллельные входящие)
     if (connectionMap.Keys.Count(n => 
             n != from && 
             levelMap[n] == levelMap[from] && 
@@ -587,8 +579,6 @@ private bool CheckParallelByCommonNode(Transform from, Transform to)
     {
         return true;
     }
-
-        // Случай 3: Общий маршрут через промежуточные узлы
         return false;
 }
 
@@ -598,17 +588,14 @@ private bool CheckParallelByCommonNode(Transform from, Transform to)
 
 private Transform FindCommonHigherNeighbor(Transform nodeA, Transform nodeB)
 {
-    // Получаем всех соседей nodeA, которые выше на 1 уровень
     var higherNeighborsA = connectionMap[nodeA]
         .Where(n => levelMap[n] == levelMap[nodeA] - 1)
         .ToList();
 
-    // Получаем всех соседей nodeB, которые выше на 1 уровень
     var higherNeighborsB = connectionMap[nodeB]
         .Where(n => levelMap[n] == levelMap[nodeB] - 1)
         .ToList();
 
-    // Находим пересечение (общих соседей выше)
     return higherNeighborsA.Intersect(higherNeighborsB).FirstOrDefault();
 }
 
@@ -623,15 +610,13 @@ private float CalculateEffectiveResistance(Transform from, Transform to)
     switch(GetConnectionType(from, to))
     {
         case ConnectionType.Sequential:
-            // Для последовательного - сумма сопротивлений
             return rFrom + rTo;
             
         case ConnectionType.Parallel:
-            // Для параллельного - по формуле параллельных сопротивлений
             return (rFrom * rTo) / (rFrom + rTo);
             
         default:
-            return rFrom + rTo; // по умолчанию последовательное
+            return rFrom + rTo;
     }
 }
 
