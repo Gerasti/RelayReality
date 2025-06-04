@@ -32,7 +32,6 @@ Color newColor = Color.Lerp(baseColor, pulse, lerp);
         lineRenderer.material.color = newColor;
     }
 
-    // <--- Вот этот метод обязателен
     public void SetActive(bool state)
     {
         isActive = state;
